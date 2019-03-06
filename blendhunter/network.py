@@ -19,44 +19,26 @@ from keras.callbacks import EarlyStopping
 from keras.callbacks import ReduceLROnPlateau
 
 
-class BlendFindNet(object):
+class BlendHunter(object):
 
-    def __init__(self, train_dir, valid_dir, train_labels=None,
-                 valid_labels=None, image_shape=None, epochs_top=500,
-                 epochs_fine=50, batch_size_top=256, batch_size_fine=16,
-                 classes=('blended', 'not_blended'),
-                 save_bottleneck=True, bottleneck_path='./',
-                 top_model_file='./top_model_weights.h5',
-                 final_model_file='./final_model_weights.h5'):
+    def __init__(self, image_shape=None, classes=('blended', 'not_blended'),
+                 final_model_file='./final_model_weights'):
 
-        self._epochs_top = epochs_top
-        self._epochs_fine = epochs_fine
-        self._batch_size_top = batch_size_top
-        self._batch_size_fine = batch_size_fine
+        self._image_shape = image_shape
         self._classes = classes
-        self._save_bottleneck = save_bottleneck
-        self._bottleneck_path = bottleneck_path
-        self._top_model_file = top_model_file
         self._final_model_file = final_model_file
-        self._features = {'train': {}, 'valid': {}}
-        self._features['train']['dir'] = train_dir
-        self._features['valid']['dir'] = valid_dir
-        self._features['train']['labels'] = train_labels
-        self._features['valid']['labels'] = valid_labels
 
-        if not isinstance(image_shape, type(None)):
-            self._image_shape = image_shape
-        else:
-            self._get_image_shape()
-        self._target_size = self._image_shape[:2]
-
-    def _get_image_shape(self):
-
-        path = '{}/{}'.format(self._features['train']['dir'],
-                              self._classes[0])
-        file = '{}/{}'.format(path, os.listdir(path)[0])
+    def _get_image_shape(self, file):
 
         self._image_shape = Image.open(file).size
+
+    def _get_target_shape(self, image_path):
+
+        if isinstance(self._image_shape, type(None)):
+            file = '{}/{}'.format(image_path, os.listdir(image_path)[0])
+            self._get_image_shape(file)
+
+        self._target_size = self._image_shape[:2]
 
     def _load_generator(self, input_dir, batch_size=None,
                         class_mode=None, augmentation=False):
@@ -85,16 +67,14 @@ class BlendFindNet(object):
         return (self._vgg16_model.predict_generator(generator,
                 generator.steps))
 
-    @staticmethod
-    def _save_bottleneck_feature(bot_feat, data_type):
+    def _save_bottleneck_feature(self, bot_feat, data_type):
 
-        file_name = 'bottleneck_features_{}.npy'.format(data_type)
+        file_name = '{}_{}.npy'.format(self._bottleneck_file, data_type)
         np.save(file_name, bot_feat)
 
     def _load_bottleneck_feature(self, data_type):
 
-        file_name = ('{}bottleneck_features_{}.npy'.format(
-                     self._bottleneck_path, data_type))
+        file_name = '{}_{}.npy'.format(self._bottleneck_file, data_type)
         if os.path.isfile(file_name):
             return np.load(file_name)
         else:
@@ -156,8 +136,10 @@ class BlendFindNet(object):
         model.compile(optimizer='adam', loss='binary_crossentropy',
                       metrics=['accuracy'])
 
+        top_model_file = '{}.h5'.format(self._top_model_file)
+
         callbacks = []
-        callbacks.append(ModelCheckpoint(self._top_model_file,
+        callbacks.append(ModelCheckpoint(top_model_file,
                          monitor='val_loss', verbose=1,
                          save_best_only=True, save_weights_only=True,
                          mode='auto', period=1))
@@ -176,22 +158,34 @@ class BlendFindNet(object):
                   validation_data=(self._features['valid']['bottleneck'],
                                    self._features['valid']['labels']))
 
-        model.save_weights(self._top_model_file)
+        model.save_weights(top_model_file)
 
     def _freeze_layers(self, model, depth):
 
         for layer in model.layers[:depth]:
             layer.trainable = False
 
-    def _fine_tune(self):
+    def _build_final_model(self, load_top_weights=False,
+                           load_final_weights=False):
 
         vgg16_model = self._build_vgg16_model(self._image_shape)
         top_model = self._build_top_model(vgg16_model.output_shape[1:],
                                           dropout=0.4)
-        top_model.load_weights(self._top_model_file)
+
+        if load_top_weights:
+            top_model.load_weights('{}.h5'.format(self._top_model_file))
 
         model = Model(inputs=vgg16_model.input,
                       outputs=top_model(vgg16_model.output))
+
+        if load_final_weights:
+            model.load_weights('{}.h5'.format(self._final_model_file))
+
+        return model
+
+    def _fine_tune(self):
+
+        model = self._build_final_model(load_top_weights=True)
 
         self._freeze_layers(model, 18)
 
@@ -240,4 +234,50 @@ class BlendFindNet(object):
                             validation_data=valid_gen,
                             validation_steps=valid_gen.steps)
 
-        model.save_weights(self._final_model_file)
+        model.save_weights('{}.h5'.format(self._final_model_file))
+
+    def train(self, train_dir, valid_dir, train_labels=None, valid_labels=None,
+              epochs_top=500, epochs_fine=50, batch_size_top=256,
+              batch_size_fine=16, save_bottleneck=True,
+              bottleneck_file='./bottleneck_features',
+              top_model_file='./top_model_weights',):
+
+        self._epochs_top = epochs_top
+        self._epochs_fine = epochs_fine
+        self._batch_size_top = batch_size_top
+        self._batch_size_fine = batch_size_fine
+        self._save_bottleneck = save_bottleneck
+        self._bottleneck_file = bottleneck_file
+        self._top_model_file = top_model_file
+        self._features = {'train': {}, 'valid': {}}
+        self._features['train']['dir'] = train_dir
+        self._features['valid']['dir'] = valid_dir
+        self._features['train']['labels'] = train_labels
+        self._features['valid']['labels'] = valid_labels
+
+        self._get_target_shape('{}/{}'.format(self._features['train']['dir'],
+                               self._classes[0]))
+        self._get_bottleneck_features()
+        self._train_top_model()
+        self._fine_tune()
+
+    def predict(self, test_path):
+
+        self._get_target_shape('{}/{}'.format(test_path,
+                               os.listdir(test_path)[0]))
+
+        print(self._image_shape)
+        print(self._target_size)
+        exit()
+
+        model = self._build_final_model(load_final_weights=True)
+
+        test_gen = self._load_generator(test_path, batch_size=1)
+        test_gen.reset()
+
+        labels = {0: self._classes[0], 1: self._classes[1]}
+        preds = [labels[k] for k in np.around(
+                 model.predict_generator(test_gen, verbose=1)).flatten()]
+
+        return dict((file, pred) for file, pred in
+                    zip(test_gen.filenames, preds))
