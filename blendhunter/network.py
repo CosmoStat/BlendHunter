@@ -2,6 +2,9 @@
 
 """ NETWORK
 
+This module defines the BlendHunter class which can be used to retrain the
+network or use predefined weights to make predictions on unseen data.
+
 :Author: Samuel Farrens <samuel.farrens@cea.fr>
 
 """
