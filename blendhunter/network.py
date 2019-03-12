@@ -37,7 +37,7 @@ class BlendHunter(object):
     """
 
     def __init__(self, image_shape=None, classes=('blended', 'not_blended'),
-                 final_model_file='./final_model_weights', verbose=1):
+                 final_model_file='./weights/final_model_weights', verbose=0):
 
         self._image_shape = image_shape
         self._classes = classes
@@ -393,8 +393,6 @@ class BlendHunter(object):
                                            patience=5, epsilon=0.001,
                                            cooldown=2, verbose=self._verbose))
 
-        model.summary()
-
         model.fit_generator(train_gen, steps_per_epoch=train_gen.steps,
                             epochs=self._epochs_fine,
                             callbacks=callbacks,
@@ -419,8 +417,8 @@ class BlendHunter(object):
     def train(self, train_dir, valid_dir, train_labels=None, valid_labels=None,
               epochs_top=500, epochs_fine=50, batch_size_top=256,
               batch_size_fine=16, save_bottleneck=True,
-              bottleneck_file='./bottleneck_features',
-              top_model_file='./top_model_weights',):
+              bottleneck_file='./weights/bottleneck_features',
+              top_model_file='./weights/top_model_weights',):
         """ Train
 
         Train the BlendHunter network.
@@ -507,6 +505,7 @@ class BlendHunter(object):
                                    os.listdir(test_path)[0]))
             model = self._build_final_model(load_final_weights=True)
             test_gen = self._load_generator(test_path, batch_size=1)
+            self.filenames = test_gen.filenames
             test_gen.reset()
             res = model.predict_generator(test_gen,
                                           verbose=self._verbose).flatten()
