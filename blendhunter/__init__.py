@@ -9,6 +9,6 @@ postage stamps.
 
 """
 
-__all__ = ['network']
+__all__ = ['blend', 'data', 'network']
 
 from .network import BlendHunter

@@ -11,6 +11,7 @@ This module defines classes and methods for preparing training data.
 import os
 import numpy as np
 import cv2
+from .blend import Blender
 
 
 class CreateTrainData(object):
@@ -45,7 +46,7 @@ class CreateTrainData(object):
 
     def __init__(self, images, output_path, train_fractions=(0.45, 0.45, .1),
                  classes=('blended', 'not_blended'),
-                 class_fractions=(0.5, 0.5)):
+                 class_fractions=(0.5, 0.5), blend_images=True):
 
         self.images = np.random.permutation(images)
         self.path = output_path
@@ -56,6 +57,7 @@ class CreateTrainData(object):
         self.train_fractions = train_fractions
         self.classes = classes
         self.class_fractions = class_fractions
+        self.blend_images = blend_images
         self._image_num = 0
 
         self._make_output_dirs()
@@ -93,9 +95,6 @@ class CreateTrainData(object):
             self._test_path = '{}/test/test'.format(bh_path)
             os.mkdir('{}/test'.format(bh_path))
             os.mkdir(self._test_path)
-
-    def _blend_images(self):
-        pass
 
     @staticmethod
     def _get_slices(array, fractions):
@@ -193,10 +192,36 @@ class CreateTrainData(object):
             cv2.imwrite('{}/image_{}.jpg'.format(path, self._image_num), image)
             self._image_num += 1
 
-    def _split_images(self):
-        """ Split Images
+    def _blend_data(self, data_set):
+        """ Blend Data Set
 
-        Split the images into training, validation and testing samples.
+        Blend the first sample of the data set and combine the other set
+        without blending.
+
+        Parameters
+        ----------
+        data_set : list
+            List of data samples
+
+        Returns
+        -------
+        list
+            Blended data set
+
+        """
+
+        if len(data_set) == 2:
+
+            data_set[0] = Blender(data_set[0], ratio=0.5).blend()
+            data_set[1] = Blender(data_set[1], ratio=1.5,
+                                  blended=False).blend()
+
+        return data_set
+
+    def generate(self):
+        """ Generate
+
+        Generate training data.
 
         """
 
@@ -204,6 +229,10 @@ class CreateTrainData(object):
 
         train_set = self._split_array(image_split[0], self.class_fractions)
         valid_set = self._split_array(image_split[1], self.class_fractions)
+
+        if self.blend_images:
+            train_set = self._blend_data(train_set)
+            valid_set = self._blend_data(valid_set)
 
         for images, path in zip(train_set, self._train_paths):
             self._write_images(images, path)
