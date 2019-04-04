@@ -119,10 +119,10 @@ class BlendHunter(object):
 
         return generator
 
-    def _get_bottleneck_feature(self, input_dir):
-        """ Get Bottleneck Feature
+    def _get_feature(self, input_dir):
+        """ Get Feature
 
-        Get bottleneck feature from VGG16 model.
+        Get network feature from VGG16 model.
 
         Parameters
         ----------
@@ -131,47 +131,52 @@ class BlendHunter(object):
 
         Returns
         -------
-        np.ndarray
-            VGG16 bottleneck feature
+        tuple
+            VGG16 bottleneck feature, class labels
 
         """
 
         generator = self._load_generator(input_dir,
                                          batch_size=self._batch_size_top)
+        labels = generator.classes[:generator.steps * self._batch_size_top]
 
         return (self._vgg16_model.predict_generator(generator,
-                generator.steps))
+                generator.steps), labels)
 
-    def _save_bottleneck_feature(self, bot_feat, data_type):
-        """ Save Bottleneck Feature
+    def _save_data(self, data, data_type, file_path):
+        """ Save Data
 
-        Save bottleneck feature to file.
+        Save data to file.
 
         Parameters
         ----------
-        bot_feat : np.ndarray
-            Bottleneck feature
+        data : np.ndarray
+            Output data
         data_type : str
             Type of feature to be saved
+        file_path : str
+            File path
 
         """
 
-        file_name = '{}_{}.npy'.format(self._bottleneck_file, data_type)
-        np.save(file_name, bot_feat)
+        file_name = '{}_{}.npy'.format(file_path, data_type)
+        np.save(file_name, data)
 
-    def _load_bottleneck_feature(self, data_type):
-        """ Load Bottleneck Feature
+    def _load_data(self, data_type, file_path):
+        """ Load Data
 
-        Load bottleneck feature from file.
+        Load data from file.
 
         Parameters
         ----------
         data_type : str
             Type of feature to be loaded
+        file_path : str
+            File path
 
         """
 
-        file_name = '{}_{}.npy'.format(self._bottleneck_file, data_type)
+        file_name = '{}_{}.npy'.format(file_path, data_type)
         if os.path.isfile(file_name):
             return np.load(file_name)
         else:
@@ -198,10 +203,10 @@ class BlendHunter(object):
         return VGG16(include_top=False, weights='imagenet',
                      input_shape=input_shape)
 
-    def _get_bottleneck_features(self):
-        """ Get Bottleneck Features
+    def _get_features(self):
+        """ Get Features
 
-        Get the bottleneck features from the VGG16 model.
+        Get the network features from the VGG16 model.
 
         """
 
@@ -209,36 +214,34 @@ class BlendHunter(object):
 
         for key, value in self._features.items():
 
-            bot_feat = self._get_bottleneck_feature(value['dir'])
+            bot_feat, labels = self._get_feature(value['dir'])
 
             if self._save_bottleneck:
-                self._save_bottleneck_feature(bot_feat, key)
-                value['bottleneck'] = self._load_bottleneck_feature(key)
-            else:
-                value['bottleneck'] = bot_feat
+                self._save_data(bot_feat, key, self._bottleneck_file)
 
-    def _load_bottleneck_features(self):
+            if self._save_labels:
+                self._save_data(labels, key, self._labels_file)
+
+            value['bottleneck'] = bot_feat
+            value['labels'] = labels
+
+    def _load_features(self):
         """ Load Bottleneck Features
 
         Load VGG16 bottleneck features.
 
         """
 
-        for key, value in self._features.items():
-            if 'bottleneck' not in value:
-                value['bottleneck'] = self._load_bottleneck_feature(key)
+        for feature_name in ('bottleneck', 'labels'):
 
-    def _set_labels(self):
-        """ Set Labels
+            if feature_name == 'bottleneck':
+                out_path = self._bottleneck_file
+            else:
+                out_path = self._labels_file
 
-        Set training labels for trainging data.
-
-        """
-
-        for key, value in self._features.items():
-            if isinstance(value['labels'], type(None)):
-                n_samp = value['bottleneck'].shape[0] // 2
-                value['labels'] = np.array([0] * n_samp + [1] * n_samp)
+            for key, value in self._features.items():
+                if feature_name not in value:
+                    value[feature_name] = self._load_data(out_path)
 
     @staticmethod
     def _build_top_model(input_shape, dense_output=(256, 1024), dropout=0.1):
@@ -278,8 +281,7 @@ class BlendHunter(object):
 
         """
 
-        self._load_bottleneck_features()
-        self._set_labels()
+        self._load_features()
 
         model = (self._build_top_model(
                  input_shape=self._features['train']['bottleneck'].shape[1:]))
@@ -417,10 +419,11 @@ class BlendHunter(object):
 
         model.save_weights('{}.h5'.format(self._final_model_file))
 
-    def train(self, train_dir, valid_dir, train_labels=None, valid_labels=None,
-              epochs_top=500, epochs_fine=50, batch_size_top=256,
-              batch_size_fine=16, save_bottleneck=True,
+    def train(self, input_path, train_dir_name='train',
+              valid_dir_name='validation', epochs_top=500, epochs_fine=50,
+              batch_size_top=250, batch_size_fine=16, save_bottleneck=True,
               bottleneck_file='./weights/bottleneck_features',
+              save_labels=True, labels_file='./weights/labels',
               top_model_file='./weights/top_model_weights',):
         """ Train
 
@@ -428,14 +431,12 @@ class BlendHunter(object):
 
         Parameters
         ----------
-        train_dir : str
-            Path to training data
-        valid_dir : str
-            Path to validation data
-        train_labels : list
-            Training data labels
-        valid_labels : list
-            Validation data labels
+        input_path : str
+            Path to input data
+        train_dir_name : str, optional
+            Training data directory name, default is 'train'
+        valid_dir_name : str, optional
+            Validation data directory name, default is 'validation'
         epochs_top : int, optional
             Number of training epochs for top model, default is 500
         epochs_fine : int, optional
@@ -459,17 +460,19 @@ class BlendHunter(object):
         self._batch_size_top = batch_size_top
         self._batch_size_fine = batch_size_fine
         self._save_bottleneck = save_bottleneck
+        self._save_labels = save_labels
         self._bottleneck_file = bottleneck_file
+        self._labels_file = labels_file
         self._top_model_file = top_model_file
         self._features = {'train': {}, 'valid': {}}
-        self._features['train']['dir'] = train_dir
-        self._features['valid']['dir'] = valid_dir
-        self._features['train']['labels'] = train_labels
-        self._features['valid']['labels'] = valid_labels
+        self._features['train']['dir'] = '{}/{}'.format(input_path,
+                                                        train_dir_name)
+        self._features['valid']['dir'] = '{}/{}'.format(input_path,
+                                                        valid_dir_name)
 
         self._get_target_shape('{}/{}'.format(self._features['train']['dir'],
                                self._classes[0]))
-        self._get_bottleneck_features()
+        self._get_features()
         self._train_top_model()
         self._fine_tune()
 

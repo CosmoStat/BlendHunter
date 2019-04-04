@@ -167,6 +167,30 @@ class CreateTrainData(object):
 
         return np.array(array * 255).astype(int)
 
+    @staticmethod
+    def _pad(array, padding):
+        """ Pad
+
+        Pad array with specified padding.
+
+        Parameters
+        ----------
+        array : np.ndarray
+            Input array
+        padding : np.ndarray
+            Padding amount
+
+        Returns
+        -------
+        np.ndarray
+            Padded array
+
+        """
+
+        x, y = padding + padding % 2
+
+        return np.pad(array, ((x, x), (y, y), (0, 0)), 'constant')
+
     def _write_images(self, images, path):
         """ Write Images
 
@@ -181,6 +205,8 @@ class CreateTrainData(object):
 
         """
 
+        min_shape = np.array([48, 48, 1])
+
         for image in images:
 
             if len(image.shape) == 2:
@@ -188,6 +214,11 @@ class CreateTrainData(object):
 
             if np.max(image) <= 1:
                 image = self._rescale(image)
+
+            shape_diff = (min_shape - np.array(image.shape))[:2]
+
+            if np.abs(shape_diff).sum() > 0:
+                image = self._pad(image, shape_diff)
 
             cv2.imwrite('{}/image_{}.jpg'.format(path, self._image_num), image)
             self._image_num += 1
