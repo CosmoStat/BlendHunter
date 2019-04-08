@@ -62,6 +62,25 @@ class CreateTrainData(object):
 
         self._make_output_dirs()
 
+        if self.blend_images:
+            self._rescale_class_fractions()
+
+    def _rescale_class_fractions(self):
+        """ Rescale Class Fractions
+
+        Adjust the class fractions to take into account blending of images.
+
+        """
+
+        if len(self.class_fractions) == 2:
+
+            frac1, frac2 = self.class_fractions
+
+            frac1 *= (frac1 + 3 * frac2 / 2)
+            frac2 = 1.0 - frac1
+
+            self.class_fractions = (frac1, frac2)
+
     def _make_output_dirs(self):
         """ Make Output Directories
 
@@ -223,6 +242,42 @@ class CreateTrainData(object):
             cv2.imwrite('{}/image_{}.jpg'.format(path, self._image_num), image)
             self._image_num += 1
 
+    def _write_data_set(self, data_list, path_list):
+        """ Write Data Set
+
+        Write input data set to corresponding paths.
+
+        Parameters
+        ----------
+        data_list : list
+            List of image arrays
+        path_list : list
+            List of paths
+
+        """
+
+        for data, path in zip(data_list, path_list):
+            self._write_images(data, path)
+
+    def _write_labels(self, data_list):
+        """ Write Labels
+
+        Write test data labels to a numpy binary.
+
+        Parameters
+        ----------
+        data_list : list
+            List of image arrays
+
+        """
+
+        sizes = [array.shape[0] for array in data_list]
+
+        labels = np.array([[self.classes[0]] * sizes[0] +
+                           [self.classes[1]] * sizes[1]])
+
+        np.save('{}/labels.npy'.format(self._test_path), labels)
+
     def _blend_data(self, data_set):
         """ Blend Data Set
 
@@ -244,8 +299,11 @@ class CreateTrainData(object):
         if len(data_set) == 2:
 
             data_set[0] = Blender(data_set[0], ratio=0.5).blend()
-            data_set[1] = Blender(data_set[1], ratio=1.5,
-                                  blended=False).blend()
+            not_blended_1, not_blended_2 = self._split_array(data_set[1],
+                                                             (0.5, 0.5))
+            not_blended_2 = Blender(not_blended_2, ratio=1.5,
+                                    blended=False).blend()
+            data_set[1] = np.vstack((not_blended_1, not_blended_2))
 
         return data_set
 
@@ -265,10 +323,15 @@ class CreateTrainData(object):
             train_set = self._blend_data(train_set)
             valid_set = self._blend_data(valid_set)
 
-        for images, path in zip(train_set, self._train_paths):
-            self._write_images(images, path)
-        for images, path in zip(valid_set, self._valid_paths):
-            self._write_images(images, path)
+        self._write_data_set(train_set, self._train_paths)
+        self._write_data_set(valid_set, self._valid_paths)
 
         if self.train_fractions[-1] > 0:
-            self._write_images(image_split[2], self._test_path)
+            frac1 = np.random.choice(np.arange(1, 5) * 0.2)
+            frac2 = 1.0 - frac1
+            test_set = self._split_array(image_split[2], (frac1, frac2))
+            if self.blend_images:
+                test_set = self._blend_data(test_set)
+                self._write_labels(test_set)
+                test_set = np.vstack(test_set)
+            self._write_images(test_set, self._test_path)

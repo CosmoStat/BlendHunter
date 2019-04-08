@@ -388,7 +388,7 @@ class BlendHunter(object):
                                          class_mode='binary')
 
         callbacks = []
-        callbacks.append(ModelCheckpoint('./vgg16_weights_best.h5',
+        callbacks.append(ModelCheckpoint('{}.h5'.format(self._fine_tune_file),
                          monitor='val_loss', verbose=self._verbose,
                          save_best_only=True, save_weights_only=True,
                          mode='auto', period=1))
@@ -424,7 +424,8 @@ class BlendHunter(object):
               batch_size_top=250, batch_size_fine=16, save_bottleneck=True,
               bottleneck_file='./weights/bottleneck_features',
               save_labels=True, labels_file='./weights/labels',
-              top_model_file='./weights/top_model_weights',):
+              fine_tune_file='./weights/fine_tune_checkpoint',
+              top_model_file='./weights/top_model_weights'):
         """ Train
 
         Train the BlendHunter network.
@@ -450,6 +451,9 @@ class BlendHunter(object):
         bottleneck_file : str, optional
             File name for bottleneck features, default is
             './bottleneck_features'
+        fine_tune_file : str, optional
+            Training checkpoint for the fine tuning step, default is
+            './weights/fine_tune_checkpoint'
         top_model_file : str, optional
             File name for top model weights, default is './top_model_weights'
 
@@ -463,6 +467,7 @@ class BlendHunter(object):
         self._save_labels = save_labels
         self._bottleneck_file = bottleneck_file
         self._labels_file = labels_file
+        self._fine_tune_file = fine_tune_file
         self._top_model_file = top_model_file
         self._features = {'train': {}, 'valid': {}}
         self._features['train']['dir'] = '{}/{}'.format(input_path,
