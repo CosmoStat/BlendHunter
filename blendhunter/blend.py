@@ -11,14 +11,18 @@ This module defines classes and methods for blending images.
 import numpy as np
 from lmfit import Model
 from lmfit.models import GaussianModel, ConstantModel
+from sf_tools.image.stamp import postage_stamp
 
 
 class Blender(object):
 
-    def __init__(self, images, ratio=1.0, blended=True):
+    def __init__(self, images, ratio=1.0, blended=True, method='sf',
+                 xwang_sigma=0.15):
 
         self.ratio = ratio
         self.blended = blended
+        self.method = method
+        self.xwang_sigma = xwang_sigma
 
         if images.shape[0] % 2:
             images = images[:-1]
@@ -91,20 +95,60 @@ class Blender(object):
 
         return image1 + image2
 
+    @staticmethod
+    def _gal_size_xwang(image):
+
+        size = [np.array(np.where(np.sum(image, axis=i) != 0)).shape[1]
+                for i in range(2)]
+        return np.array(size)
+
+    @classmethod
+    def _blend_xwang(cls, image1, image2, buffer=5, sigma=0.15):
+
+        shape1, shape2 = np.array(image1.shape), np.array(image2.shape)
+
+        padding = ((shape1[0] * buffer, shape1[0] * buffer),
+                   (shape1[1] * buffer, shape1[1] * buffer))
+
+        new_image = np.pad(image1, padding, 'constant')
+        new_centre = np.array(new_image.shape) // 2
+
+        dis = cls._gal_size_xwang(image1) + cls._gal_size_xwang(image2)
+
+        blend_pos = [np.random.randint(new_centre[i] - sigma * dis[i],
+                     new_centre[i] + sigma * dis[i]) for i in range(2)]
+        blend_slice = [slice(blend_pos[i] - shape2[i] // 2,
+                       blend_pos[i] + shape2[i] // 2 + 1) for i in range(2)]
+
+        new_image[blend_slice[0], blend_slice[1]] += image2
+
+        new_image = postage_stamp(new_image, pos=new_centre,
+                                  pixel_rad=shape1 // 2)
+
+        return new_image
+
     def _combine_images(self, image1, image2):
 
-        centre1, radius1 = self._fit_image(image1)
-        centre2, radius2 = self._fit_image(image2)
-        radius = self.ratio * (radius1 + radius2)
-        width = image1.shape[0]
+        if self.method == 'xwang':
 
-        if self.blended:
-            shift = self._random_shift(centre1, radius)
+            res = self._blend_xwang(image1, image2, sigma=self.xwang_sigma)
+
         else:
-            shift = self._random_shift(centre1, radius,
-                                       self._get_outer_rad(width, radius))
 
-        return self._blend(image1, image2, shift)
+            centre1, radius1 = self._fit_image(image1)
+            centre2, radius2 = self._fit_image(image2)
+            radius = self.ratio * (radius1 + radius2)
+            width = image1.shape[0]
+
+            if self.blended:
+                shift = self._random_shift(centre1, radius)
+            else:
+                shift = self._random_shift(centre1, radius,
+                                           self._get_outer_rad(width, radius))
+
+            res = self._blend(image1, image2, shift)
+
+        return res
 
     def blend(self):
 

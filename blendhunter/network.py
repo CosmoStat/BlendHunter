@@ -47,6 +47,11 @@ class BlendHunter(object):
         self._final_model_file = final_model_file
         self._verbose = verbose
 
+    @staticmethod
+    def _format(path, name):
+
+        return '{}/{}'.format(path, name)
+
     def _get_image_shape(self, file):
         """ Get Image Shape
 
@@ -74,7 +79,7 @@ class BlendHunter(object):
         """
 
         if isinstance(self._image_shape, type(None)) and image_path:
-            file = '{}/{}'.format(image_path, os.listdir(image_path)[0])
+            file = self._format(image_path, os.listdir(image_path)[0])
             self._get_image_shape(file)
 
         self._target_size = self._image_shape[:2]
@@ -422,10 +427,10 @@ class BlendHunter(object):
     def train(self, input_path, train_dir_name='train',
               valid_dir_name='validation', epochs_top=500, epochs_fine=50,
               batch_size_top=250, batch_size_fine=16, save_bottleneck=True,
-              bottleneck_file='./weights/bottleneck_features',
-              save_labels=True, labels_file='./weights/labels',
-              fine_tune_file='./weights/fine_tune_checkpoint',
-              top_model_file='./weights/top_model_weights'):
+              weights_path='./weights', bottleneck_file='bottleneck_features',
+              save_labels=True, labels_file='labels',
+              fine_tune_file='fine_tune_checkpoint',
+              top_model_file='top_model_weights'):
         """ Train
 
         Train the BlendHunter network.
@@ -448,6 +453,8 @@ class BlendHunter(object):
             Batch size for fine tuning, default is 16
         save_bottleneck : bool, optional
             Option to save bottleneck features, default is True
+        weights_path : str, optional
+            Path to weights
         bottleneck_file : str, optional
             File name for bottleneck features, default is
             './bottleneck_features'
@@ -465,17 +472,17 @@ class BlendHunter(object):
         self._batch_size_fine = batch_size_fine
         self._save_bottleneck = save_bottleneck
         self._save_labels = save_labels
-        self._bottleneck_file = bottleneck_file
-        self._labels_file = labels_file
-        self._fine_tune_file = fine_tune_file
-        self._top_model_file = top_model_file
+        self._bottleneck_file = self._format(weights_path, bottleneck_file)
+        self._labels_file = self._format(weights_path, labels_file)
+        self._fine_tune_file = self._format(weights_path, fine_tune_file)
+        self._top_model_file = self._format(weights_path, top_model_file)
         self._features = {'train': {}, 'valid': {}}
-        self._features['train']['dir'] = '{}/{}'.format(input_path,
-                                                        train_dir_name)
-        self._features['valid']['dir'] = '{}/{}'.format(input_path,
-                                                        valid_dir_name)
+        self._features['train']['dir'] = self._format(input_path,
+                                                      train_dir_name)
+        self._features['valid']['dir'] = self._format(input_path,
+                                                      valid_dir_name)
 
-        self._get_target_shape('{}/{}'.format(self._features['train']['dir'],
+        self._get_target_shape(self._format(self._features['train']['dir'],
                                self._classes[0]))
         self._get_features()
         self._train_top_model()
@@ -512,7 +519,7 @@ class BlendHunter(object):
 
         if test_path:
 
-            self._get_target_shape('{}/{}'.format(test_path,
+            self._get_target_shape(self._format(test_path,
                                    os.listdir(test_path)[0]))
             model = self._build_final_model(load_final_weights=True)
             test_gen = self._load_generator(test_path, batch_size=1)

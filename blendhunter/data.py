@@ -46,7 +46,8 @@ class CreateTrainData(object):
 
     def __init__(self, images, output_path, train_fractions=(0.45, 0.45, .1),
                  classes=('blended', 'not_blended'),
-                 class_fractions=(0.5, 0.5), blend_images=True):
+                 class_fractions=(0.5, 0.5), blend_images=True,
+                 blend_method='sf'):
 
         self.images = np.random.permutation(images)
         self.path = output_path
@@ -58,6 +59,7 @@ class CreateTrainData(object):
         self.classes = classes
         self.class_fractions = class_fractions
         self.blend_images = blend_images
+        self.blend_method = blend_method
         self._image_num = 0
 
         self._make_output_dirs()
@@ -298,11 +300,14 @@ class CreateTrainData(object):
 
         if len(data_set) == 2:
 
-            data_set[0] = Blender(data_set[0], ratio=0.5).blend()
+            data_set[0] = Blender(data_set[0], ratio=0.5,
+                                  method=self.blend_method).blend()
             not_blended_1, not_blended_2 = self._split_array(data_set[1],
                                                              (0.5, 0.5))
             not_blended_2 = Blender(not_blended_2, ratio=1.5,
-                                    blended=False).blend()
+                                    blended=False,
+                                    method=self.blend_method,
+                                    xwang_sigma=1.0).blend()
             data_set[1] = np.vstack((not_blended_1, not_blended_2))
 
         return data_set
