@@ -21,7 +21,10 @@ class Blender(object):
 
         self.ratio = ratio
         self.blended = blended
-        self.method = method
+        if method in ('sf', 'xwang'):
+            self.method = method
+        else:
+            raise ValueError('Method must be "sf" or "xwang".')
         self.xwang_sigma = xwang_sigma
 
         if images.shape[0] % 2:

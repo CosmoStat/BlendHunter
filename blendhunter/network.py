@@ -306,7 +306,7 @@ class BlendHunter(object):
                                        patience=10, verbose=self._verbose))
 
         callbacks.append(ReduceLROnPlateau(monitor='val_loss', factor=0.5,
-                                           patience=5, min_delta=0.001,
+                                           patience=5, epsilon=0.001,
                                            cooldown=2, verbose=self._verbose))
 
         model.fit(self._features['train']['bottleneck'],
@@ -364,7 +364,8 @@ class BlendHunter(object):
                       outputs=top_model(vgg16_model.output))
 
         if load_final_weights:
-            model.load_weights('{}.h5'.format(self._final_model_file))
+            # model.load_weights('{}.h5'.format(self._final_model_file))
+            model.load_weights('{}.h5'.format(self._fine_tune_file))
 
         return model
 
@@ -522,7 +523,9 @@ class BlendHunter(object):
             self._get_target_shape(self._format(test_path,
                                    os.listdir(test_path)[0]))
             model = self._build_final_model(load_final_weights=True)
-            test_gen = self._load_generator(test_path, batch_size=1)
+            test_gen = self._load_generator(test_path,
+                                            class_mode='categorical',
+                                            batch_size=1)
             self.filenames = test_gen.filenames
             test_gen.reset()
             res = model.predict_generator(test_gen,

@@ -47,7 +47,7 @@ class CreateTrainData(object):
     def __init__(self, images, output_path, train_fractions=(0.45, 0.45, .1),
                  classes=('blended', 'not_blended'),
                  class_fractions=(0.5, 0.5), blend_images=True,
-                 blend_method='sf'):
+                 blend_fractions=(0.5, 0.5), blend_method='sf'):
 
         self.images = np.random.permutation(images)
         self.path = output_path
@@ -59,6 +59,7 @@ class CreateTrainData(object):
         self.classes = classes
         self.class_fractions = class_fractions
         self.blend_images = blend_images
+        self.blend_fractions = blend_fractions
         self.blend_method = blend_method
         self._image_num = 0
 
@@ -186,7 +187,9 @@ class CreateTrainData(object):
 
         """
 
-        return np.array(array * 255).astype(int)
+        array = np.abs(array)
+
+        return np.array(array * 255 / np.max(array)).astype(int)
 
     @staticmethod
     def _pad(array, padding):
@@ -210,7 +213,8 @@ class CreateTrainData(object):
 
         x, y = padding + padding % 2
 
-        return np.pad(array, ((x, x), (y, y), (0, 0)), 'constant')
+        # return np.pad(array, ((x, x), (y, y), (0, 0)), 'constant')
+        return np.pad(array, ((x, x), (y, y)), 'constant')
 
     def _write_images(self, images, path):
         """ Write Images
@@ -226,22 +230,25 @@ class CreateTrainData(object):
 
         """
 
-        min_shape = np.array([48, 48, 1])
+        min_shape = np.array([48, 48])
+        # min_shape = np.array([48, 48, 1])
 
         for image in images:
 
-            if len(image.shape) == 2:
-                image = image.reshape(*image.shape, 1)
+            # if len(image.shape) == 2:
+            #     image = image.reshape(*image.shape, 1)
 
-            if np.max(image) <= 1:
-                image = self._rescale(image)
+            # if np.max(image) <= 1:
+            image = self._rescale(image)
 
             shape_diff = (min_shape - np.array(image.shape))[:2]
 
             if np.abs(shape_diff).sum() > 0:
                 image = self._pad(image, shape_diff)
 
-            cv2.imwrite('{}/image_{}.jpg'.format(path, self._image_num), image)
+            cv2.imwrite('{}/image_{}.png'.format(path, self._image_num), image)
+            # cv2.imwrite('{}/image_{}.jpg'.format(path, self._image_num),
+            # image)
             self._image_num += 1
 
     def _write_data_set(self, data_list, path_list):
@@ -302,8 +309,8 @@ class CreateTrainData(object):
 
             data_set[0] = Blender(data_set[0], ratio=0.5,
                                   method=self.blend_method).blend()
-            not_blended_1, not_blended_2 = self._split_array(data_set[1],
-                                                             (0.5, 0.5))
+            not_blended_1, not_blended_2 = (self._split_array(data_set[1],
+                                            self.blend_fractions))
             not_blended_2 = Blender(not_blended_2, ratio=1.5,
                                     blended=False,
                                     method=self.blend_method,
