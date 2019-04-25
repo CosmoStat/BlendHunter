@@ -11,16 +11,18 @@ This module defines classes and methods for blending images.
 import numpy as np
 from lmfit import Model
 from lmfit.models import GaussianModel, ConstantModel
+from modopt.base.np_adjust import pad2d
 from sf_tools.image.stamp import postage_stamp
 
 
 class Blender(object):
 
-    def __init__(self, images, ratio=1.0, blended=True, method='sf',
-                 xwang_sigma=0.15):
+    def __init__(self, images, ratio=1.0, overlap=True, stamp_shape=(116, 116),
+                 method='sf', xwang_sigma=0.15):
 
         self.ratio = ratio
-        self.blended = blended
+        self.overlap = overlap
+        self.stamp_shape = np.array(stamp_shape)
         if method in ('sf', 'xwang'):
             self.method = method
         else:
@@ -32,6 +34,7 @@ class Blender(object):
 
         half_sample = images.shape[0] // 2
 
+        self._images = images
         self._centrals = images[:half_sample]
         self._companions = images[half_sample:]
 
@@ -75,12 +78,7 @@ class Blender(object):
         return x, y
 
     @staticmethod
-    def _get_outer_rad(width, radius):
-
-        return np.sqrt(0.5 * width ** 2 - width * radius + radius ** 2)
-
-    @staticmethod
-    def _pad_image(image, shift):
+    def _pad_image_shift(image, shift):
 
         pad = [(_shift, 0) if _shift >= 0 else (0, -_shift)
                for _shift in shift]
@@ -91,7 +89,7 @@ class Blender(object):
     def _blend(cls, image1, image2, shift):
 
         dim = image1.shape
-        image2 = cls._pad_image(image2, shift)
+        image2 = cls._pad_image_shift(image2, shift)
 
         image2 = image2[:dim[0]] if shift[0] >= 0 else image2[-shift[0]:]
         image2 = image2[:, :dim[1]] if shift[1] >= 0 else image2[:, -shift[1]:]
@@ -101,53 +99,122 @@ class Blender(object):
     @staticmethod
     def _gal_size_xwang(image):
 
-        size = [np.array(np.where(np.sum(image, axis=i) != 0)).shape[1]
-                for i in range(2)]
-        return np.array(size)
+        return np.array([np.count_nonzero(image.sum(axis=ax))
+                         for ax in range(2)])
+
+    @staticmethod
+    def _area_prob(shape1, shape2):
+
+        shape1, shape2 = np.array(shape1), np.array(shape2)
+
+        area = np.prod(shape1) - np.prod(shape2)
+        shape_diff = (shape1 - shape2) // 2
+        prob_ab = shape_diff[1] * shape1[0] / area
+        prob_cd = 0.5 - prob_ab
+
+        return prob_ab, prob_ab, prob_cd, prob_cd
 
     @classmethod
-    def _blend_xwang(cls, image1, image2, buffer=5, sigma=0.15):
+    def _blend_pos_xwang(cls, centre, box, limits, overlap=True):
+
+        centre, box, limits = np.array(centre), np.array(box), np.array(limits)
+
+        if overlap:
+            blend_pos = [np.random.randint(centre[i] - box[i],
+                         centre[i] + box[i]) for i in range(2)]
+        else:
+            sector = np.random.choice(['a', 'b', 'c', 'd'],
+                                      p=cls.area_prob(centre * 2, box))
+            blend_pos = [None, None]
+            if sector == 'a':
+                blend_pos[0] = np.random.randint(limits[0][0], limits[1][0])
+                blend_pos[1] = np.random.randint(limits[0][1],
+                                                 centre[1] - box[1])
+            elif sector == 'b':
+                blend_pos[0] = np.random.randint(limits[0][0], limits[1][0])
+                blend_pos[1] = np.random.randint(centre[1] + box[1],
+                                                 limits[1][1])
+            elif sector == 'c':
+                blend_pos[0] = np.random.randint(limits[0][0],
+                                                 centre[0] - box[0])
+                blend_pos[1] = np.random.randint(centre[1] - box[1],
+                                                 centre[1] + box[1])
+            elif sector == 'd':
+                blend_pos[0] = np.random.randint(centre[0] + box[0],
+                                                 limits[1][1])
+                blend_pos[1] = np.random.randint(centre[1] - box[1],
+                                                 centre[1] + box[1])
+
+        return blend_pos
+
+    @classmethod
+    def _blend_xwang(cls, image1, image2, ps_shape=(116, 116), sigma=0.15,
+                     overlap=True):
 
         shape1, shape2 = np.array(image1.shape), np.array(image2.shape)
+        rad2 = shape2 // 2
+        ps_shape = np.array(ps_shape)
 
-        padding = ((shape1[0] * buffer, shape1[0] * buffer),
-                   (shape1[1] * buffer, shape1[1] * buffer))
-
-        new_image = np.pad(image1, padding, 'constant')
-        new_centre = np.array(new_image.shape) // 2
+        shape_diff = (ps_shape - shape1) // 2 + shape2
 
         dis = cls._gal_size_xwang(image1) + cls._gal_size_xwang(image2)
+        box = np.around(sigma * dis).astype(int)
 
-        blend_pos = [np.random.randint(new_centre[i] - sigma * dis[i],
-                     new_centre[i] + sigma * dis[i]) for i in range(2)]
-        blend_slice = [slice(blend_pos[i] - shape2[i] // 2,
-                       blend_pos[i] + shape2[i] // 2 + 1) for i in range(2)]
+        padding = ((shape_diff[0], shape_diff[0]),
+                   (shape_diff[1], shape_diff[1]))
+
+        new_image = np.pad(image1, padding, 'constant')
+        new_shape = np.array(new_image.shape)
+        new_centre = new_shape // 2
+
+        limits = rad2, new_shape - rad2
+
+        bp = cls._blend_pos_xwang(new_centre, box, limits, overlap=True)
+
+        blend_slice = [slice(bp[i] - shape2[i] // 2,
+                       bp[i] + shape2[i] // 2 + 1) for i in range(2)]
 
         new_image[blend_slice[0], blend_slice[1]] += image2
 
         new_image = postage_stamp(new_image, pos=new_centre,
-                                  pixel_rad=shape1 // 2)
+                                  pixel_rad=ps_shape // 2)
 
         return new_image
+
+    def _pad_image(self, image):
+
+        if not isinstance(image, np.ndarray):
+            print(type(image))
+
+        im_shape = np.array(image.shape)
+        padding = (self.stamp_shape - im_shape) // 2
+
+        return pad2d(image, padding)
 
     def _combine_images(self, image1, image2):
 
         if self.method == 'xwang':
 
-            res = self._blend_xwang(image1, image2, sigma=self.xwang_sigma)
+            res = self._blend_xwang(image1, image2, ps_shape=self.stamp_shape,
+                                    sigma=self.xwang_sigma,
+                                    overlap=self.overlap)
 
         else:
 
-            centre1, radius1 = self._fit_image(image1)
-            centre2, radius2 = self._fit_image(image2)
-            radius = self.ratio * (radius1 + radius2)
-            width = image1.shape[0]
+            centre1, width1 = self._fit_image(image1)
+            centre2, width2 = self._fit_image(image2)
 
-            if self.blended:
+            image1 = self._pad_image(image1)
+            image2 = self._pad_image(image2)
+
+            radius = self.ratio * (width1 + width2)
+            outer_radius = image1.shape[0] / 2.
+
+            if self.overlap:
                 shift = self._random_shift(centre1, radius)
             else:
                 shift = self._random_shift(centre1, radius,
-                                           self._get_outer_rad(width, radius))
+                                           outer_radius=outer_radius)
 
             res = self._blend(image1, image2, shift)
 
@@ -159,3 +226,7 @@ class Blender(object):
                   zip(self._centrals, self._companions)]
 
         return np.array(blends)
+
+    def pad(self):
+
+        return np.array([self._pad_image(image) for image in self._images])

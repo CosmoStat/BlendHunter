@@ -213,7 +213,6 @@ class CreateTrainData(object):
 
         x, y = padding + padding % 2
 
-        # return np.pad(array, ((x, x), (y, y), (0, 0)), 'constant')
         return np.pad(array, ((x, x), (y, y)), 'constant')
 
     def _write_images(self, images, path):
@@ -231,24 +230,17 @@ class CreateTrainData(object):
         """
 
         min_shape = np.array([48, 48])
-        # min_shape = np.array([48, 48, 1])
 
         for image in images:
 
-            # if len(image.shape) == 2:
-            #     image = image.reshape(*image.shape, 1)
-
-            # if np.max(image) <= 1:
             image = self._rescale(image)
 
             shape_diff = (min_shape - np.array(image.shape))[:2]
 
-            if np.abs(shape_diff).sum() > 0:
+            if np.sum(shape_diff) > 0:
                 image = self._pad(image, shape_diff)
 
             cv2.imwrite('{}/image_{}.png'.format(path, self._image_num), image)
-            # cv2.imwrite('{}/image_{}.jpg'.format(path, self._image_num),
-            # image)
             self._image_num += 1
 
     def _write_data_set(self, data_list, path_list):
@@ -307,15 +299,19 @@ class CreateTrainData(object):
 
         if len(data_set) == 2:
 
-            data_set[0] = Blender(data_set[0], ratio=0.5,
+            data_set[0] = Blender(data_set[0], ratio=0.8,
                                   method=self.blend_method).blend()
-            not_blended_1, not_blended_2 = (self._split_array(data_set[1],
-                                            self.blend_fractions))
-            not_blended_2 = Blender(not_blended_2, ratio=1.5,
-                                    blended=False,
-                                    method=self.blend_method,
-                                    xwang_sigma=1.0).blend()
-            data_set[1] = np.vstack((not_blended_1, not_blended_2))
+            no_blend_1, no_blend_2 = (self._split_array(data_set[1],
+                                      self.blend_fractions))
+            no_blend_1 = Blender(no_blend_1).pad()
+            no_blend_2 = Blender(no_blend_2, ratio=1.5, overlap=False,
+                                 method=self.blend_method,
+                                 xwang_sigma=1.0).blend()
+            data_set[1] = np.vstack((no_blend_1, no_blend_2))
+            # data_set[1] = Blender(data_set[1], ratio=1.2,
+            #                       blended=False,
+            #                       method=self.blend_method,
+            #                       xwang_sigma=1.0).blend()
 
         return data_set
 

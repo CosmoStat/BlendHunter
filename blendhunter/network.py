@@ -306,7 +306,7 @@ class BlendHunter(object):
                                        patience=10, verbose=self._verbose))
 
         callbacks.append(ReduceLROnPlateau(monitor='val_loss', factor=0.5,
-                                           patience=5, epsilon=0.001,
+                                           patience=5, min_delta=0.001,
                                            cooldown=2, verbose=self._verbose))
 
         model.fit(self._features['train']['bottleneck'],
@@ -364,8 +364,8 @@ class BlendHunter(object):
                       outputs=top_model(vgg16_model.output))
 
         if load_final_weights:
-            # model.load_weights('{}.h5'.format(self._final_model_file))
-            model.load_weights('{}.h5'.format(self._fine_tune_file))
+            model.load_weights('{}.h5'.format(self._final_model_file))
+            # model.load_weights('{}.h5'.format(self._fine_tune_file))
 
         return model
 
@@ -401,7 +401,7 @@ class BlendHunter(object):
         callbacks.append(EarlyStopping(monitor='val_loss', min_delta=0.001,
                                        patience=10, verbose=self._verbose))
         callbacks.append(ReduceLROnPlateau(monitor='val_loss', factor=0.5,
-                                           patience=5, epsilon=0.001,
+                                           patience=5, min_delta=0.001,
                                            cooldown=2, verbose=self._verbose))
 
         model.fit_generator(train_gen, steps_per_epoch=train_gen.steps,
