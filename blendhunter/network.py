@@ -33,18 +33,22 @@ class BlendHunter(object):
         Expected shape of input images
     classes : tuple, optional
         List of classes, default is ('blended', 'not_blended')
+    weights_path : str, optional
+        Path to weights, default is './weights'
     final_model_file : str, optional
         File name of the final model weights, default is
-        './final_model_weights'
+        'final_model_weights'
 
     """
 
     def __init__(self, image_shape=None, classes=('blended', 'not_blended'),
-                 final_model_file='./weights/final_model_weights', verbose=0):
+                 weights_path='./weights',
+                 final_model_file='final_model_weights', verbose=0):
 
         self._image_shape = image_shape
         self._classes = classes
-        self._final_model_file = final_model_file
+        self._weights_path = weights_path
+        self._final_model_file = self._format(weights_path, final_model_file)
         self._verbose = verbose
 
     @staticmethod
@@ -428,7 +432,7 @@ class BlendHunter(object):
     def train(self, input_path, train_dir_name='train',
               valid_dir_name='validation', epochs_top=500, epochs_fine=50,
               batch_size_top=250, batch_size_fine=16, save_bottleneck=True,
-              weights_path='./weights', bottleneck_file='bottleneck_features',
+              bottleneck_file='bottleneck_features',
               save_labels=True, labels_file='labels',
               fine_tune_file='fine_tune_checkpoint',
               top_model_file='top_model_weights'):
@@ -454,16 +458,14 @@ class BlendHunter(object):
             Batch size for fine tuning, default is 16
         save_bottleneck : bool, optional
             Option to save bottleneck features, default is True
-        weights_path : str, optional
-            Path to weights
         bottleneck_file : str, optional
             File name for bottleneck features, default is
-            './bottleneck_features'
+            'bottleneck_features'
         fine_tune_file : str, optional
             Training checkpoint for the fine tuning step, default is
-            './weights/fine_tune_checkpoint'
+            'fine_tune_checkpoint'
         top_model_file : str, optional
-            File name for top model weights, default is './top_model_weights'
+            File name for top model weights, default is 'top_model_weights'
 
         """
 
@@ -473,10 +475,11 @@ class BlendHunter(object):
         self._batch_size_fine = batch_size_fine
         self._save_bottleneck = save_bottleneck
         self._save_labels = save_labels
-        self._bottleneck_file = self._format(weights_path, bottleneck_file)
-        self._labels_file = self._format(weights_path, labels_file)
-        self._fine_tune_file = self._format(weights_path, fine_tune_file)
-        self._top_model_file = self._format(weights_path, top_model_file)
+        self._bottleneck_file = self._format(self._weights_path,
+                                             bottleneck_file)
+        self._labels_file = self._format(self._weights_path, labels_file)
+        self._fine_tune_file = self._format(self._weights_path, fine_tune_file)
+        self._top_model_file = self._format(self._weights_path, top_model_file)
         self._features = {'train': {}, 'valid': {}}
         self._features['train']['dir'] = self._format(input_path,
                                                       train_dir_name)
