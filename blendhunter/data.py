@@ -308,10 +308,6 @@ class CreateTrainData(object):
                                  method=self.blend_method,
                                  xwang_sigma=1.0).blend()
             data_set[1] = np.vstack((no_blend_1, no_blend_2))
-            # data_set[1] = Blender(data_set[1], ratio=1.2,
-            #                       blended=False,
-            #                       method=self.blend_method,
-            #                       xwang_sigma=1.0).blend()
 
         return data_set
 

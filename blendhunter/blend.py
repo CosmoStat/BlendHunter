@@ -13,6 +13,7 @@ from lmfit import Model
 from lmfit.models import GaussianModel, ConstantModel
 from modopt.base.np_adjust import pad2d
 from sf_tools.image.stamp import postage_stamp
+from sf_tools.image.distort import recentre
 
 
 class Blender(object):
@@ -57,15 +58,15 @@ class Blender(object):
         sum_x_fit = cls._fit_gauss(x_vals, sum_x)
         sum_y_fit = cls._fit_gauss(x_vals, sum_y)
 
-        centre = (sum_x_fit.params['center'].value,
-                  sum_y_fit.params['center'].value)
+        centre = (int(sum_x_fit.params['center'].value),
+                  int(sum_y_fit.params['center'].value))
         width = min(sum_x_fit.params['fwhm'].value,
                     sum_y_fit.params['fwhm'].value)
 
         return centre, width
 
     @staticmethod
-    def _random_shift(centre, radius, outer_radius=None):
+    def _random_shift(radius, outer_radius=None):
 
         theta = np.random.ranf() * 2 * np.pi
         if outer_radius:
@@ -204,17 +205,16 @@ class Blender(object):
             centre1, width1 = self._fit_image(image1)
             centre2, width2 = self._fit_image(image2)
 
-            image1 = self._pad_image(image1)
-            image2 = self._pad_image(image2)
+            image1 = self._pad_image(recentre(image1, centre1))
+            image2 = self._pad_image(recentre(image2, centre2))
 
             radius = self.ratio * (width1 + width2)
             outer_radius = image1.shape[0] / 2.
 
             if self.overlap:
-                shift = self._random_shift(centre1, radius)
+                shift = self._random_shift(radius)
             else:
-                shift = self._random_shift(centre1, radius,
-                                           outer_radius=outer_radius)
+                shift = self._random_shift(radius, outer_radius=outer_radius)
 
             res = self._blend(image1, image2, shift)
 
