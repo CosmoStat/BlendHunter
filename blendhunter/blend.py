@@ -38,6 +38,7 @@ class Blender(object):
         self._images = images
         self._centrals = images[:half_sample]
         self._companions = images[half_sample:]
+        self.obj_centres = []
 
     @staticmethod
     def _fit_gauss(xval, yval):
@@ -94,6 +95,8 @@ class Blender(object):
 
         image2 = image2[:dim[0]] if shift[0] >= 0 else image2[-shift[0]:]
         image2 = image2[:, :dim[1]] if shift[1] >= 0 else image2[:, -shift[1]:]
+
+        print('shift=', shift)
 
         return image1 + image2
 

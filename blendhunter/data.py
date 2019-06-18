@@ -299,8 +299,13 @@ class CreateTrainData(object):
 
         if len(data_set) == 2:
 
-            data_set[0] = Blender(data_set[0], ratio=0.8,
-                                  method=self.blend_method).blend()
+            blended = Blender(data_set[0], ratio=0.8, method=self.blend_method)
+
+            data_set[0] = blended.blend()
+
+            print(blended.obj_centres)
+            exit()
+
             no_blend_1, no_blend_2 = (self._split_array(data_set[1],
                                       self.blend_fractions))
             no_blend_1 = Blender(no_blend_1).pad()
