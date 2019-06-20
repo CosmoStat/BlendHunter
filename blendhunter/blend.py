@@ -19,7 +19,7 @@ from sf_tools.image.distort import recentre
 class Blender(object):
 
     def __init__(self, images, ratio=1.0, overlap=True, stamp_shape=(116, 116),
-                 method='sf', xwang_sigma=0.15):
+                 method='sf', xwang_sigma=0.15, seed=None):
 
         self.ratio = ratio
         self.overlap = overlap
@@ -29,6 +29,7 @@ class Blender(object):
         else:
             raise ValueError('Method must be "sf" or "xwang".')
         self.xwang_sigma = xwang_sigma
+        self.seed = seed
 
         if images.shape[0] % 2:
             images = images[:-1]
@@ -67,7 +68,10 @@ class Blender(object):
         return centre, width
 
     @staticmethod
-    def _random_shift(radius, outer_radius=None):
+    def _random_shift(radius, outer_radius=None, seed=None):
+
+        if seed:
+            np.random.seed(seed)
 
         theta = np.random.ranf() * 2 * np.pi
         if outer_radius:
@@ -95,8 +99,6 @@ class Blender(object):
 
         image2 = image2[:dim[0]] if shift[0] >= 0 else image2[-shift[0]:]
         image2 = image2[:, :dim[1]] if shift[1] >= 0 else image2[:, -shift[1]:]
-
-        print('shift=', shift)
 
         return image1 + image2
 
@@ -215,9 +217,15 @@ class Blender(object):
             outer_radius = image1.shape[0] / 2.
 
             if self.overlap:
-                shift = self._random_shift(radius)
+                shift = self._random_shift(radius, seed=self.seed)
             else:
-                shift = self._random_shift(radius, outer_radius=outer_radius)
+                shift = self._random_shift(radius, outer_radius=outer_radius,
+                                           seed=self.seed)
+
+            im1_cen = np.array(image1.shape) // 2
+            im2_cen = np.copy(im1_cen) + np.array(shift)[::-1]
+
+            self.obj_centres = [tuple(im1_cen), tuple(im2_cen), shift]
 
             res = self._blend(image1, image2, shift)
 

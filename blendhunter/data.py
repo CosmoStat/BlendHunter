@@ -303,9 +303,6 @@ class CreateTrainData(object):
 
             data_set[0] = blended.blend()
 
-            print(blended.obj_centres)
-            exit()
-
             no_blend_1, no_blend_2 = (self._split_array(data_set[1],
                                       self.blend_fractions))
             no_blend_1 = Blender(no_blend_1).pad()
