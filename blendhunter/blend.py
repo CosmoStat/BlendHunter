@@ -225,7 +225,7 @@ class Blender(object):
             im1_cen = np.array(image1.shape) // 2
             im2_cen = np.copy(im1_cen) + np.array(shift)[::-1]
 
-            self.obj_centres = [tuple(im1_cen), tuple(im2_cen), shift]
+            self.obj_centres.append((tuple(im1_cen), tuple(im2_cen)))
 
             res = self._blend(image1, image2, shift)
 
