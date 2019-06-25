@@ -279,6 +279,10 @@ class CreateTrainData(object):
 
         np.save('{}/labels.npy'.format(self._test_path), labels)
 
+    def _write_positions(self, pos_list):
+
+        np.save('{}/positions.npy'.format(self._test_path), np.array(pos_list))
+
     def _blend_data(self, data_set):
         """ Blend Data Set
 
@@ -299,17 +303,30 @@ class CreateTrainData(object):
 
         if len(data_set) == 2:
 
-            data_set[0] = Blender(data_set[0], ratio=0.8,
-                                  method=self.blend_method).blend()
+            # Blend overlapping images
+            blended = Blender(data_set[0], ratio=0.8, method=self.blend_method)
+            data_set[0] = blended.blend()
+
+            # Blend non-overlapping images and pad isolated objects
             no_blend_1, no_blend_2 = (self._split_array(data_set[1],
                                       self.blend_fractions))
-            no_blend_1 = Blender(no_blend_1).pad()
-            no_blend_2 = Blender(no_blend_2, ratio=1.5, overlap=False,
-                                 method=self.blend_method,
-                                 xwang_sigma=1.0).blend()
+
+            not_blended_1 = Blender(no_blend_1)
+            no_blend_1 = not_blended_1.pad()
+
+            not_blended_2 = Blender(no_blend_2, ratio=1.5, overlap=False,
+                                    method=self.blend_method,
+                                    xwang_sigma=1.0)
+            no_blend_2 = not_blended_2.blend()
+
             data_set[1] = np.vstack((no_blend_1, no_blend_2))
 
-        return data_set
+            # Save object positions
+            positions = []
+            for sample in (blended, not_blended_1, not_blended_2):
+                positions.extend(sample.obj_centres)
+
+        return data_set, positions
 
     def generate(self):
         """ Generate
@@ -324,8 +341,8 @@ class CreateTrainData(object):
         valid_set = self._split_array(image_split[1], self.class_fractions)
 
         if self.blend_images:
-            train_set = self._blend_data(train_set)
-            valid_set = self._blend_data(valid_set)
+            train_set, train_pos = self._blend_data(train_set)
+            valid_set, valid_pos = self._blend_data(valid_set)
 
         self._write_data_set(train_set, self._train_paths)
         self._write_data_set(valid_set, self._valid_paths)
@@ -335,7 +352,8 @@ class CreateTrainData(object):
             frac2 = 1.0 - frac1
             test_set = self._split_array(image_split[2], (frac1, frac2))
             if self.blend_images:
-                test_set = self._blend_data(test_set)
+                test_set, test_pos = self._blend_data(test_set)
                 self._write_labels(test_set)
+                self._write_positions(test_pos)
                 test_set = np.vstack(test_set)
             self._write_images(test_set, self._test_path)
