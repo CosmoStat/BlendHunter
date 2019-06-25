@@ -240,4 +240,12 @@ class Blender(object):
 
     def pad(self):
 
-        return np.array([self._pad_image(image) for image in self._images])
+        im1_cen = np.array(self._pad_image(self._images[0]).shape) // 2
+        res = []
+
+        for image in self._images:
+
+            res.append(self._pad_image(image))
+            self.obj_centres.append((tuple(im1_cen), (None, None)))
+
+        return np.array(res)

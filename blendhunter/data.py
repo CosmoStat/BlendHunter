@@ -310,12 +310,15 @@ class CreateTrainData(object):
             # Blend non-overlapping images and pad isolated objects
             no_blend_1, no_blend_2 = (self._split_array(data_set[1],
                                       self.blend_fractions))
+
             not_blended_1 = Blender(no_blend_1)
             no_blend_1 = not_blended_1.pad()
+
             not_blended_2 = Blender(no_blend_2, ratio=1.5, overlap=False,
                                     method=self.blend_method,
                                     xwang_sigma=1.0)
             no_blend_2 = not_blended_2.blend()
+
             data_set[1] = np.vstack((no_blend_1, no_blend_2))
 
             # Save object positions
@@ -349,8 +352,8 @@ class CreateTrainData(object):
             frac2 = 1.0 - frac1
             test_set = self._split_array(image_split[2], (frac1, frac2))
             if self.blend_images:
-                test_set, tets_pos = self._blend_data(test_set)
+                test_set, test_pos = self._blend_data(test_set)
                 self._write_labels(test_set)
-                self._write_positions(train_pos)
+                self._write_positions(test_pos)
                 test_set = np.vstack(test_set)
             self._write_images(test_set, self._test_path)
