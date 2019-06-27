@@ -49,7 +49,7 @@ class CreateTrainData(object):
                  class_fractions=(0.5, 0.5), blend_images=True,
                  blend_fractions=(0.5, 0.5), blend_method='sf'):
 
-        self.images = np.random.permutation(images)
+        self.images = images
         self.path = output_path
         if len(train_fractions) != 3:
             raise ValueError('Fractions must be a tuple of length 3.')
@@ -335,6 +335,8 @@ class CreateTrainData(object):
 
         """
 
+        self.images = np.random.permutation(self.images)
+
         image_split = self._split_array(self.images, self.train_fractions)
 
         train_set = self._split_array(image_split[0], self.class_fractions)
@@ -357,3 +359,20 @@ class CreateTrainData(object):
                 self._write_positions(test_pos)
                 test_set = np.vstack(test_set)
             self._write_images(test_set, self._test_path)
+
+    def prep_axel(self):
+
+        self.images[0] = np.random.permutation(self.images[0])
+        self.images[1] = np.random.permutation(self.images[1])
+
+        split1 = self._split_array(self.images[0], self.train_fractions)
+        split2 = self._split_array(self.images[1], self.train_fractions)
+
+        train_set = split1[0], split2[0]
+        valid_set = split1[1], split2[1]
+        test_set = split1[2], split2[2]
+
+        self._write_data_set(train_set, self._train_paths)
+        self._write_data_set(valid_set, self._valid_paths)
+        self._write_labels(test_set)
+        self._write_images(np.vstack(test_set), self._test_path)
