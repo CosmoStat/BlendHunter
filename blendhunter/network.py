@@ -578,7 +578,8 @@ class BlendHunter(object):
             self.filenames = test_gen.filenames
             test_gen.reset()
             res = model.predict_generator(test_gen,
-                                          verbose=self._verbose).flatten()
+                                          verbose=self._verbose,
+                                          steps=test_gen.steps).flatten()
 
         elif not isinstance(input_data, type(None)):
 
