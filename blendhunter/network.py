@@ -281,7 +281,7 @@ class BlendHunter(object):
                     value[feature_name] = self._load_data(key, out_path)
 
     @staticmethod
-    def _build_top_model(input_shape, dense_output=(256, 1024), dropout=0.1):
+    def _build_top_model(input_shape, dense_output=(256, 1024), dropout=0.0):
         """ Build Top Model
 
         Build the fully connected layers of the network.
@@ -419,7 +419,7 @@ class BlendHunter(object):
         train_gen = self._load_generator(self._features['train']['dir'],
                                          batch_size=self._batch_size_fine,
                                          class_mode='binary',
-                                         augmentation=True)
+                                         augmentation=False)
 
         valid_gen = self._load_generator(self._features['valid']['dir'],
                                          batch_size=self._batch_size_fine,
@@ -577,7 +577,7 @@ class BlendHunter(object):
                                             batch_size=1)
             self.filenames = test_gen.filenames
             test_gen.reset()
-            res = model.predict_generator(test_gen,
+            res = model.predict_generator(test_gen, steps=test_gen.steps,
                                           verbose=self._verbose).flatten()
 
         elif not isinstance(input_data, type(None)):
