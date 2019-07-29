@@ -281,7 +281,7 @@ class BlendHunter(object):
                     value[feature_name] = self._load_data(key, out_path)
 
     @staticmethod
-    def _build_top_model(input_shape, dense_output=(256, 1024), dropout=0.1):
+    def _build_top_model(input_shape, dense_output=(256, 1024), dropout=0):
         """ Build Top Model
 
         Build the fully connected layers of the network.
@@ -388,7 +388,7 @@ class BlendHunter(object):
 
         vgg16_model = self._build_vgg16_model(self._image_shape)
         top_model = self._build_top_model(vgg16_model.output_shape[1:],
-                                          dropout=0.1)
+                                          dropout=0)
 
         if load_top_weights:
             top_model.load_weights('{}.h5'.format(self._top_model_file))
