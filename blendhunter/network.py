@@ -13,7 +13,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-import time as time
+from time import time
 from cv2 import imread
 from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential, Model
