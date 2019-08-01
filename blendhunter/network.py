@@ -12,6 +12,7 @@ network or use predefined weights to make predictions on unseen data.
 import os
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 from cv2 import imread
 from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential, Model
@@ -360,6 +361,8 @@ class BlendHunter(object):
         Plot the training history metrics.
 
         """
+
+        sns.set(style="darkgrid")
 
         if not isinstance(self.history, type(None)):
 
