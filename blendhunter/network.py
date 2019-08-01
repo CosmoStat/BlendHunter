@@ -11,6 +11,9 @@ network or use predefined weights to make predictions on unseen data.
 
 import os
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
+from time import time
 from cv2 import imread
 from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential, Model
@@ -53,6 +56,7 @@ class BlendHunter(object):
         self._top_model_file = self._format(weights_path, top_model_file)
         self._final_model_file = self._format(weights_path, final_model_file)
         self._verbose = verbose
+        self.history = None
 
     @staticmethod
     def _format(path, name):
@@ -75,6 +79,22 @@ class BlendHunter(object):
         """
 
         return '{}/{}'.format(path, name)
+
+    def getkwarg(self, key, default=None):
+        """ Get keyword agrument
+
+        Get value from keyword agruments if it exists otherwise return default.
+
+        Parameters
+        ----------
+        key : str
+            Dictionary key
+        default : optional
+            Default value
+
+        """
+
+        return self._kwargs[key] if key in self._kwargs else default
 
     @staticmethod
     def _get_image_shape(file):
@@ -323,8 +343,9 @@ class BlendHunter(object):
         model = (self._build_top_model(
                  input_shape=self._features['train']['bottleneck'].shape[1:]))
 
-        model.compile(optimizer='adam', loss='binary_crossentropy',
-                      metrics=['accuracy'])
+        model.compile(optimizer=self.getkwarg('top_opt', 'adam'),
+                      loss=self.getkwarg('top_loss', 'binary_crossentropy'),
+                      metrics=self.getkwarg('top_metrics', ['accuracy']))
 
         top_model_file = '{}.h5'.format(self._top_model_file)
 
@@ -334,22 +355,65 @@ class BlendHunter(object):
                          save_best_only=True, save_weights_only=True,
                          mode='auto', period=1))
 
-        callbacks.append(EarlyStopping(monitor='val_loss', min_delta=0.001,
-                                       patience=10, verbose=self._verbose))
+        if self.getkwarg('top_early_stop', True):
+
+            min_delta = self.getkwarg('top_min_delta', 0.001)
+            patience = self.getkwarg('top_patience', 10)
+
+            callbacks.append(EarlyStopping(monitor='val_loss',
+                                           min_delta=min_delta,
+                                           patience=patience,
+                                           verbose=self._verbose))
 
         callbacks.append(ReduceLROnPlateau(monitor='val_loss', factor=0.5,
                                            patience=5, min_delta=0.001,
                                            cooldown=2, verbose=self._verbose))
 
-        model.fit(self._features['train']['bottleneck'],
-                  self._features['train']['labels'],
-                  epochs=self._epochs_top, batch_size=self._batch_size_top,
-                  callbacks=callbacks,
-                  validation_data=(self._features['valid']['bottleneck'],
-                                   self._features['valid']['labels']),
-                  verbose=self._verbose)
+        self.history = (model.fit(self._features['train']['bottleneck'],
+                        self._features['train']['labels'],
+                        epochs=self._epochs_top,
+                        batch_size=self._batch_size_top,
+                        callbacks=callbacks,
+                        validation_data=(self._features['valid']['bottleneck'],
+                                         self._features['valid']['labels']),
+                        verbose=self._verbose))
 
         model.save_weights(top_model_file)
+
+    def plot_history(self):
+        """ Plot History
+
+        Plot the training history metrics.
+
+        """
+
+        sns.set(style="darkgrid")
+
+        if not isinstance(self.history, type(None)):
+
+            plt.figure(figsize=(16, 8))
+
+            plt.subplot(121)
+            plt.plot(self.history.history['acc'])
+            plt.plot(self.history.history['val_acc'])
+            plt.title('Model Accuracy')
+            plt.ylabel('Accuracy')
+            plt.xlabel('Epoch')
+            plt.legend(['train', 'valid'], loc='upper left')
+
+            plt.subplot(122)
+            plt.plot(self.history.history['loss'])
+            plt.plot(self.history.history['val_loss'])
+            plt.title('Model Loss')
+            plt.ylabel('Loss')
+            plt.xlabel('Epoch')
+            plt.legend(['train', 'valid'], loc='upper left')
+
+            plt.show()
+
+        else:
+
+            print('No history to display. Run training first.')
 
     def _freeze_layers(self, model, depth):
         """ Freeze Network Layers
@@ -466,7 +530,7 @@ class BlendHunter(object):
               bottleneck_file='bottleneck_features',
               save_labels=True, labels_file='labels',
               fine_tune_file='fine_tune_checkpoint',
-              top_model_file='top_model_weights'):
+              top_model_file='top_model_weights', **kwargs):
         """ Train
 
         Train the BlendHunter network.
@@ -504,6 +568,8 @@ class BlendHunter(object):
 
         """
 
+        start = time()
+
         self._epochs_top = epochs_top
         self._epochs_fine = epochs_fine
         self._batch_size_top = batch_size_top
@@ -519,6 +585,7 @@ class BlendHunter(object):
                                                       train_dir_name)
         self._features['valid']['dir'] = self._format(input_path,
                                                       valid_dir_name)
+        self._kwargs = kwargs
 
         self._get_target_shape(self._format(self._features['train']['dir'],
                                self._classes[0]))
@@ -528,6 +595,10 @@ class BlendHunter(object):
             self._train_top_model()
         if fine_tune:
             self._fine_tune()
+
+        end = time()
+
+        print('Duration {:0.2f}s'.format(end - start))
 
     def predict(self, input_path=None, input_path_keras=None, input_data=None,
                 weights_type='fine'):
