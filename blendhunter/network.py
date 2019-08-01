@@ -79,6 +79,22 @@ class BlendHunter(object):
 
         return '{}/{}'.format(path, name)
 
+    def getkwarg(self, key, default=None):
+        """ Get keyword agrument
+
+        Get value from keyword agruments if it exists otherwise return default.
+
+        Parameters
+        ----------
+        key : str
+            Dictionary key
+        default : optional
+            Default value
+
+        """
+
+        return self._kwargs[key] if key in self._kwargs else default
+
     @staticmethod
     def _get_image_shape(file):
         """ Get Image Shape
@@ -326,8 +342,9 @@ class BlendHunter(object):
         model = (self._build_top_model(
                  input_shape=self._features['train']['bottleneck'].shape[1:]))
 
-        model.compile(optimizer='adam', loss='binary_crossentropy',
-                      metrics=['accuracy'])
+        model.compile(optimizer=self.getkwarg('top_opt', 'adam'),
+                      loss=self.getkwarg('top_loss', 'binary_crossentropy'),
+                      metrics=self.getkwarg('top_metrics', ['accuracy']))
 
         top_model_file = '{}.h5'.format(self._top_model_file)
 
@@ -337,8 +354,15 @@ class BlendHunter(object):
                          save_best_only=True, save_weights_only=True,
                          mode='auto', period=1))
 
-        callbacks.append(EarlyStopping(monitor='val_loss', min_delta=0.001,
-                                       patience=10, verbose=self._verbose))
+        if self.getkwarg('top_early_stop', True):
+
+            min_delta = self.getkwarg('top_min_delta', 0.001)
+            patience = self.getkwarg('top_patience', 10)
+
+            callbacks.append(EarlyStopping(monitor='val_loss',
+                                           min_delta=min_delta,
+                                           patience=patience,
+                                           verbose=self._verbose))
 
         callbacks.append(ReduceLROnPlateau(monitor='val_loss', factor=0.5,
                                            patience=5, min_delta=0.001,
@@ -505,7 +529,7 @@ class BlendHunter(object):
               bottleneck_file='bottleneck_features',
               save_labels=True, labels_file='labels',
               fine_tune_file='fine_tune_checkpoint',
-              top_model_file='top_model_weights'):
+              top_model_file='top_model_weights', **kwargs):
         """ Train
 
         Train the BlendHunter network.
@@ -558,6 +582,7 @@ class BlendHunter(object):
                                                       train_dir_name)
         self._features['valid']['dir'] = self._format(input_path,
                                                       valid_dir_name)
+        self._kwargs = kwargs
 
         self._get_target_shape(self._format(self._features['train']['dir'],
                                self._classes[0]))
