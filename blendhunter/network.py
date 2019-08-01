@@ -11,6 +11,7 @@ network or use predefined weights to make predictions on unseen data.
 
 import os
 import numpy as np
+import matplotlib.pyplot as plt
 from cv2 import imread
 from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential, Model
@@ -53,6 +54,7 @@ class BlendHunter(object):
         self._top_model_file = self._format(weights_path, top_model_file)
         self._final_model_file = self._format(weights_path, final_model_file)
         self._verbose = verbose
+        self.history = None
 
     @staticmethod
     def _format(path, name):
@@ -341,15 +343,38 @@ class BlendHunter(object):
                                            patience=5, min_delta=0.001,
                                            cooldown=2, verbose=self._verbose))
 
-        model.fit(self._features['train']['bottleneck'],
-                  self._features['train']['labels'],
-                  epochs=self._epochs_top, batch_size=self._batch_size_top,
-                  callbacks=callbacks,
-                  validation_data=(self._features['valid']['bottleneck'],
-                                   self._features['valid']['labels']),
-                  verbose=self._verbose)
+        self.history = (model.fit(self._features['train']['bottleneck'],
+                        self._features['train']['labels'],
+                        epochs=self._epochs_top,
+                        batch_size=self._batch_size_top,
+                        callbacks=callbacks,
+                        validation_data=(self._features['valid']['bottleneck'],
+                                         self._features['valid']['labels']),
+                        verbose=self._verbose))
 
         model.save_weights(top_model_file)
+
+    def plot_history(self):
+
+        plt.figure()
+
+        plt.subplot(121)
+        plt.plot(self.history.history['acc'])
+        plt.plot(self.history.history['val_acc'])
+        plt.title('Model Accuracy')
+        plt.ylabel('Accuracy')
+        plt.xlabel('Epoch')
+        plt.legend(['train', 'valid'], loc='upper left')
+
+        plt.subplot(122)
+        plt.plot(self.history.history['loss'])
+        plt.plot(self.history.history['val_loss'])
+        plt.title('Model Loss')
+        plt.ylabel('Loss')
+        plt.xlabel('Epoch')
+        plt.legend(['train', 'valid'], loc='upper left')
+
+        plt.show()
 
     def _freeze_layers(self, model, depth):
         """ Freeze Network Layers
