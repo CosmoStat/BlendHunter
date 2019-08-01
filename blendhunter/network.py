@@ -355,26 +355,37 @@ class BlendHunter(object):
         model.save_weights(top_model_file)
 
     def plot_history(self):
+        """ Plot History
 
-        plt.figure()
+        Plot the training history metrics.
 
-        plt.subplot(121)
-        plt.plot(self.history.history['acc'])
-        plt.plot(self.history.history['val_acc'])
-        plt.title('Model Accuracy')
-        plt.ylabel('Accuracy')
-        plt.xlabel('Epoch')
-        plt.legend(['train', 'valid'], loc='upper left')
+        """
 
-        plt.subplot(122)
-        plt.plot(self.history.history['loss'])
-        plt.plot(self.history.history['val_loss'])
-        plt.title('Model Loss')
-        plt.ylabel('Loss')
-        plt.xlabel('Epoch')
-        plt.legend(['train', 'valid'], loc='upper left')
+        if not isinstance(self.history, type(None)):
 
-        plt.show()
+            plt.figure(figsize=(16, 8))
+
+            plt.subplot(121)
+            plt.plot(self.history.history['acc'])
+            plt.plot(self.history.history['val_acc'])
+            plt.title('Model Accuracy')
+            plt.ylabel('Accuracy')
+            plt.xlabel('Epoch')
+            plt.legend(['train', 'valid'], loc='upper left')
+
+            plt.subplot(122)
+            plt.plot(self.history.history['loss'])
+            plt.plot(self.history.history['val_loss'])
+            plt.title('Model Loss')
+            plt.ylabel('Loss')
+            plt.xlabel('Epoch')
+            plt.legend(['train', 'valid'], loc='upper left')
+
+            plt.show()
+
+        else:
+
+            print('No history to display. Run training first.')
 
     def _freeze_layers(self, model, depth):
         """ Freeze Network Layers
