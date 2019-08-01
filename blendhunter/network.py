@@ -13,6 +13,7 @@ import os
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+import time as time
 from cv2 import imread
 from keras.preprocessing.image import ImageDataGenerator
 from keras.models import Sequential, Model
@@ -567,6 +568,8 @@ class BlendHunter(object):
 
         """
 
+        start = time()
+
         self._epochs_top = epochs_top
         self._epochs_fine = epochs_fine
         self._batch_size_top = batch_size_top
@@ -592,6 +595,10 @@ class BlendHunter(object):
             self._train_top_model()
         if fine_tune:
             self._fine_tune()
+
+        end = time()
+
+        print('Duration {:0.2f}s'.format(end - start))
 
     def predict(self, input_path=None, input_path_keras=None, input_data=None,
                 weights_type='fine'):
