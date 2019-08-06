@@ -135,7 +135,7 @@ class BlendHunter(object):
         self._target_size = self._image_shape[:2]
 
     def _load_generator(self, input_dir, batch_size=None,
-                        class_mode=None, augmentation=False):
+                        class_mode=None, augmentation=True):
         """ Load Generator
 
         Load files from an input directory into a Keras generator.
@@ -301,7 +301,7 @@ class BlendHunter(object):
                     value[feature_name] = self._load_data(key, out_path)
 
     @staticmethod
-    def _build_top_model(input_shape, dense_output=(256, 1024), dropout=0):
+    def _build_top_model(input_shape, dense_output=(256, 1024), dropout=0.1):
         """ Build Top Model
 
         Build the fully connected layers of the network.
@@ -452,7 +452,7 @@ class BlendHunter(object):
 
         vgg16_model = self._build_vgg16_model(self._image_shape)
         top_model = self._build_top_model(vgg16_model.output_shape[1:],
-                                          dropout=0)
+                                          dropout=0.1)
 
         if load_top_weights:
             top_model.load_weights('{}.h5'.format(self._top_model_file))
@@ -483,7 +483,7 @@ class BlendHunter(object):
         train_gen = self._load_generator(self._features['train']['dir'],
                                          batch_size=self._batch_size_fine,
                                          class_mode='binary',
-                                         augmentation=False)
+                                         augmentation=True)
 
         valid_gen = self._load_generator(self._features['valid']['dir'],
                                          batch_size=self._batch_size_fine,
