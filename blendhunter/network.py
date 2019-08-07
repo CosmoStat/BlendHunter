@@ -325,10 +325,10 @@ class BlendHunter(object):
 
         model = Sequential()
         model.add(Flatten(input_shape=input_shape))
-        model.add(Dense(dense_output[0], kernel_initializer=keras.initializers.RandomNormal(seed=7)))
+        model.add(Dense(dense_output[0], kernel_initializer=keras.initializers.RandomNormal(seed=7), bias_initializer='zeros'))
         model.add(Dropout(dropout))
-        model.add(Dense(dense_output[1], activation='relu', kernel_initializer=keras.initializers.RandomNormal(seed=7)))
-        model.add(Dense(1, activation='sigmoid', kernel_initializer=keras.initializers.RandomNormal(seed=7)))
+        model.add(Dense(dense_output[1], activation='relu', kernel_initializer=keras.initializers.RandomNormal(seed=7), bias_initializer='zeros'))
+        model.add(Dense(1, activation='sigmoid', kernel_initializer=keras.initializers.RandomNormal(seed=7), bias_initializer='zeros'))
 
         return model
 
