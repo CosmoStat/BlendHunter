@@ -323,16 +323,14 @@ class BlendHunter(object):
             Fully connected top model
 
         """
+        random.seed(12345)
 
         model = Sequential()
         model.add(Flatten(input_shape=input_shape))
-        random.seed(12345)
-        model.add(Dense(dense_output[0], kernel_initializer='he_normal'))
+        model.add(Dense(dense_output[0], kernel_initializer=keras.initializers.he_normal(seed=7)))
         model.add(Dropout(dropout))
-        random.seed(12345)
-        model.add(Dense(dense_output[1], activation='relu', kernel_initializer='he_normal'))
-        random.seed(12345)
-        model.add(Dense(1, activation='sigmoid', kernel_initializer='he_normal'))
+        model.add(Dense(dense_output[1], activation='relu', kernel_initializer=keras.initializers.he_normal(seed=7)))
+        model.add(Dense(1, activation='sigmoid', kernel_initializer=keras.initializers.he_normal(seed=7)))
 
         return model
 
@@ -342,6 +340,8 @@ class BlendHunter(object):
         Train fully connected top model of the network.
 
         """
+        random.seed(12345)
+
 
         self._load_features()
 
@@ -454,6 +454,8 @@ class BlendHunter(object):
             Final model
 
         """
+        random.seed(12345)
+
 
         vgg16_model = self._build_vgg16_model(self._image_shape)
         top_model = self._build_top_model(vgg16_model.output_shape[1:],
