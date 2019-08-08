@@ -331,7 +331,7 @@ class BlendHunter(object):
         random.seed(12345)
         model.add(Dense(dense_output[1], activation='relu', kernel_initializer='he_normal'))
         random.seed(12345)
-        model.add(Dense(1, activation='sigmoid', kernel_initializer='he_normal')
+        model.add(Dense(1, activation='sigmoid', kernel_initializer='he_normal'))
 
         return model
 
