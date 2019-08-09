@@ -324,14 +324,12 @@ class BlendHunter(object):
             Fully connected top model
 
         """
-        random.seed(12345)
-
         model = Sequential()
         model.add(Flatten(input_shape=input_shape))
-        model.add(Dense(dense_output[0], kernel_initializer=keras.initializers.he_normal(seed=7), kernel_regularizer = keras.regularizers.l1_l2(l1=0.0001, l2=0.0001)))
+        model.add(Dense(dense_output[0], kernel_initializer=keras.initializers.he_normal(seed=12345), kernel_regularizer = keras.regularizers.l1_l2(l1=0.0001, l2=0.0001)))
         model.add(Dropout(dropout))
-        model.add(Dense(dense_output[1], activation='relu', kernel_initializer=keras.initializers.he_normal(seed=7), kernel_regularizer = keras.regularizers.l1_l2(l1=0.0001, l2=0.0001)))
-        model.add(Dense(1, activation='sigmoid', kernel_initializer=keras.initializers.he_normal(seed=7), kernel_regularizer = keras.regularizers.l1_l2(l1=0.0001, l2=0.0001)))
+        model.add(Dense(dense_output[1], activation='relu', kernel_initializer=keras.initializers.he_normal(seed=12345), kernel_regularizer = keras.regularizers.l1_l2(l1=0.0001, l2=0.0001)))
+        model.add(Dense(1, activation='sigmoid', kernel_initializer=keras.initializers.he_normal(seed=12345), kernel_regularizer = keras.regularizers.l1_l2(l1=0.0001, l2=0.0001)))
 
         return model
 
@@ -341,8 +339,6 @@ class BlendHunter(object):
         Train fully connected top model of the network.
 
         """
-        random.seed(12345)
-
 
         self._load_features()
 
@@ -455,8 +451,6 @@ class BlendHunter(object):
             Final model
 
         """
-        random.seed(12345)
-
 
         vgg16_model = self._build_vgg16_model(self._image_shape)
         top_model = self._build_top_model(vgg16_model.output_shape[1:],
