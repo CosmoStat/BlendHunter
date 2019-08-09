@@ -326,10 +326,10 @@ class BlendHunter(object):
         """
         model = Sequential()
         model.add(Flatten(input_shape=input_shape))
-        model.add(Dense(dense_output[0], kernel_initializer=keras.initializers.he_normal(seed=12345), kernel_regularizer = keras.regularizers.l1_l2(l1=0.0001, l2=0.0001)))
+        model.add(Dense(dense_output[0], kernel_initializer=keras.initializers.he_normal(seed=12345), kernel_regularizer = keras.regularizers.l1_l2(l1=0.00001, l2=0.00001), activity_regularizer= keras.regularizers.l1_l2(l1=0.00001, l2=0.00001), bias_regularizer =keras.regularizers.l1_l2(l1=0.00001, l2=0.00001)))
         model.add(Dropout(dropout))
-        model.add(Dense(dense_output[1], activation='relu', kernel_initializer=keras.initializers.he_normal(seed=12345), kernel_regularizer = keras.regularizers.l1_l2(l1=0.0001, l2=0.0001)))
-        model.add(Dense(1, activation='sigmoid', kernel_initializer=keras.initializers.he_normal(seed=12345), kernel_regularizer = keras.regularizers.l1_l2(l1=0.0001, l2=0.0001)))
+        model.add(Dense(dense_output[1], activation='relu', kernel_initializer=keras.initializers.he_normal(seed=12345), kernel_regularizer = keras.regularizers.l1_l2(l1=0.00001, l2=0.00001),  activity_regularizer= keras.regularizers.l1_l2(l1=0.00001, l2=0.00001), bias_regularizer =keras.regularizers.l1_l2(l1=0.00001, l2=0.00001)))
+        model.add(Dense(1, activation='sigmoid', kernel_initializer=keras.initializers.he_normal(seed=12345), kernel_regularizer = keras.regularizers.l1_l2(l1=0.00001, l2=0.00001),  activity_regularizer= keras.regularizers.l1_l2(l1=0.00001, l2=0.00001), bias_regularizer =keras.regularizers.l1_l2(l1=0.00001, l2=0.00001)))
 
         return model
 
