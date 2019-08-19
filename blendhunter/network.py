@@ -304,7 +304,7 @@ class BlendHunter(object):
                     value[feature_name] = self._load_data(key, out_path)
 
     @staticmethod
-    def _build_top_model(input_shape, dense_output=(256, 1024), dropout=0):
+    def _build_top_model(input_shape, dense_output=(256, 1024), dropout=0.1):
         """ Build Top Model
 
         Build the fully connected layers of the network.
@@ -326,10 +326,10 @@ class BlendHunter(object):
         """
         model = Sequential()
         model.add(Flatten(input_shape=input_shape))
-        model.add(Dense(dense_output[0], kernel_initializer=keras.initializers.he_normal(seed=12345), kernel_regularizer = keras.regularizers.l1_l2(l1=0.00001, l2=0.00001), activity_regularizer= keras.regularizers.l1_l2(l1=0.00001, l2=0.00001), bias_regularizer =keras.regularizers.l1_l2(l1=0.00001, l2=0.00001)))
+        model.add(Dense(dense_output[0]))
         model.add(Dropout(dropout))
-        model.add(Dense(dense_output[1], activation='relu', kernel_initializer=keras.initializers.he_normal(seed=12345), kernel_regularizer = keras.regularizers.l1_l2(l1=0.00001, l2=0.00001),  activity_regularizer= keras.regularizers.l1_l2(l1=0.00001, l2=0.00001), bias_regularizer =keras.regularizers.l1_l2(l1=0.00001, l2=0.00001)))
-        model.add(Dense(1, activation='sigmoid', kernel_initializer=keras.initializers.he_normal(seed=12345), kernel_regularizer = keras.regularizers.l1_l2(l1=0.00001, l2=0.00001),  activity_regularizer= keras.regularizers.l1_l2(l1=0.00001, l2=0.00001), bias_regularizer =keras.regularizers.l1_l2(l1=0.00001, l2=0.00001)))
+        model.add(Dense(dense_output[1], activation='relu'))
+        model.add(Dense(1, activation='sigmoid'))
 
         return model
 
@@ -454,7 +454,7 @@ class BlendHunter(object):
 
         vgg16_model = self._build_vgg16_model(self._image_shape)
         top_model = self._build_top_model(vgg16_model.output_shape[1:],
-                                          dropout=0)
+                                          dropout=0.1)
 
         if load_top_weights:
             top_model.load_weights('{}.h5'.format(self._top_model_file))
