@@ -509,6 +509,21 @@ class BlendHunter(object):
                             validation_steps=valid_gen.steps,
                             verbose=self._verbose)
 
+        self._freeze_layers(model, 19)
+        model.layers[17].trainable = True
+
+        model.compile(loss='binary_crossentropy',
+                      optimizer=SGD(lr=10e-5),
+                      metrics=['binary_accuracy'])
+
+        model.fit_generator(train_gen, steps_per_epoch=train_gen.steps,
+                            epochs=self._epochs_fine,
+                            callbacks=callbacks,
+                            validation_data=valid_gen,
+                            validation_steps=valid_gen.steps,
+                            verbose=self._verbose)
+ 
+
         model.save_weights('{}.h5'.format(self._final_model_file))
 
 
