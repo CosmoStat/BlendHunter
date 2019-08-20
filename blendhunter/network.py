@@ -522,7 +522,7 @@ class BlendHunter(object):
                             validation_data=valid_gen,
                             validation_steps=valid_gen.steps,
                             verbose=self._verbose)
- 
+
 
         model.save_weights('{}.h5'.format(self._final_model_file))
 
