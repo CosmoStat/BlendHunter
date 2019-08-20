@@ -509,6 +509,8 @@ class BlendHunter(object):
                             validation_steps=valid_gen.steps,
                             verbose=self._verbose)
 
+        model.save_weights('{}.h5'.format(self._final_model_file))
+
 
     def train(self, input_path, get_features=True, train_top=True,
               fine_tune=True, train_dir_name='train',
