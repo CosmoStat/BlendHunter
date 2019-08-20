@@ -476,7 +476,7 @@ class BlendHunter(object):
 
         model = self._build_final_model(load_top_weights=True)
 
-        self._freeze_layers(model, 18)
+        self._freeze_layers(model, 15)
 
         model.compile(loss='binary_crossentropy',
                       optimizer=Adam(lr=0.0001),
@@ -509,21 +509,6 @@ class BlendHunter(object):
                             validation_steps=valid_gen.steps,
                             verbose=self._verbose)
 
-        self._freeze_layers(model, 19)
-        model.layers[17].trainable = True
-
-        model.compile(loss='binary_crossentropy',
-                      optimizer=SGD(lr=10e-5),
-                      metrics=['binary_accuracy'])
-
-        model.fit_generator(train_gen, steps_per_epoch=train_gen.steps,
-                            epochs=self._epochs_fine,
-                            callbacks=callbacks,
-                            validation_data=valid_gen,
-                            validation_steps=valid_gen.steps,
-                            verbose=self._verbose)
-
-        model.save_weights('{}.h5'.format(self._final_model_file))
 
     def train(self, input_path, get_features=True, train_top=True,
               fine_tune=True, train_dir_name='train',
