@@ -479,7 +479,7 @@ class BlendHunter(object):
         self._freeze_layers(model, 17)
 
         model.compile(loss='binary_crossentropy',
-                      optimizer=Adam(lr=0.0001),
+                      optimizer=Adam(lr=0.00001),
                       metrics=['binary_accuracy'])
 
         train_gen = self._load_generator(self._features['train']['dir'],
@@ -513,7 +513,7 @@ class BlendHunter(object):
         model.layers[17].trainable = True
 
         model.compile(loss='binary_crossentropy',
-                      optimizer=SGD(lr=10e-5),
+                      optimizer=SGD(lr=1e-5, momentum=0.5),
                       metrics=['binary_accuracy'])
 
         model.fit_generator(train_gen, steps_per_epoch=train_gen.steps,
