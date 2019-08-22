@@ -476,10 +476,10 @@ class BlendHunter(object):
 
         model = self._build_final_model(load_top_weights=True)
 
-        self._freeze_layers(model, 17)
+        self._freeze_layers(model, 18)
 
         model.compile(loss='binary_crossentropy',
-                      optimizer=Adam(lr=0.00001),
+                      optimizer=SGD(lr=1e-5, momentum=0.5),
                       metrics=['binary_accuracy'])
 
         train_gen = self._load_generator(self._features['train']['dir'],
