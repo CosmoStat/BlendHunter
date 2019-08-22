@@ -51,7 +51,7 @@ class BlendHunter(object):
 
     def __init__(self, image_shape=None, classes=('blended', 'not_blended'),
                  weights_path='./weights', top_model_file='top_model_weights',
-                 final_model_file='final_model_weights', verbose=0):
+                 final_model_file='final_model_weights', verbose=2):
 
         self._image_shape = image_shape
         self._classes = classes
@@ -454,7 +454,7 @@ class BlendHunter(object):
 
         vgg16_model = self._build_vgg16_model(self._image_shape)
         top_model = self._build_top_model(vgg16_model.output_shape[1:],
-                                          dropout=0)
+                                          dropout=0.3)
 
         if load_top_weights:
             top_model.load_weights('{}.h5'.format(self._top_model_file))
