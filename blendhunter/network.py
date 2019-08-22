@@ -454,7 +454,7 @@ class BlendHunter(object):
 
         vgg16_model = self._build_vgg16_model(self._image_shape)
         top_model = self._build_top_model(vgg16_model.output_shape[1:],
-                                          dropout=0.3)
+                                          dropout=0)
 
         if load_top_weights:
             top_model.load_weights('{}.h5'.format(self._top_model_file))
@@ -476,10 +476,10 @@ class BlendHunter(object):
 
         model = self._build_final_model(load_top_weights=True)
 
-        self._freeze_layers(model, 18)
+        self._freeze_layers(model, 14)
 
         model.compile(loss='binary_crossentropy',
-                      optimizer=SGD(lr=1e-6, momentum=0.5),
+                      optimizer=SGD(lr=1e-6, momentum=0.3),
                       metrics=['binary_accuracy'])
 
         train_gen = self._load_generator(self._features['train']['dir'],
@@ -491,6 +491,7 @@ class BlendHunter(object):
                                          batch_size=self._batch_size_fine,
                                          class_mode='binary')
 
+
         callbacks = []
         callbacks.append(ModelCheckpoint('{}.h5'.format(self._fine_tune_file),
                          monitor='val_loss', verbose=self._verbose,
@@ -501,6 +502,7 @@ class BlendHunter(object):
         callbacks.append(ReduceLROnPlateau(monitor='val_loss', factor=0.5,
                                            patience=5, min_delta=0.001,
                                            cooldown=2, verbose=self._verbose))
+    #    callbacks.append(LoggingCallback(filetxt=logfile, log=write_log)])
 
         model.fit_generator(train_gen, steps_per_epoch=train_gen.steps,
                             epochs=self._epochs_fine,
@@ -513,7 +515,7 @@ class BlendHunter(object):
         model.layers[17].trainable = True
 
         model.compile(loss='binary_crossentropy',
-                      optimizer=SGD(lr=1e-6, momentum=0.5),
+                      optimizer=SGD(lr=1e-6, momentum=0.3),
                       metrics=['binary_accuracy'])
 
         model.fit_generator(train_gen, steps_per_epoch=train_gen.steps,
