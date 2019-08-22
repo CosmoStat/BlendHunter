@@ -454,7 +454,7 @@ class BlendHunter(object):
 
         vgg16_model = self._build_vgg16_model(self._image_shape)
         top_model = self._build_top_model(vgg16_model.output_shape[1:],
-                                          dropout=0.1)
+                                          dropout=0.3)
 
         if load_top_weights:
             top_model.load_weights('{}.h5'.format(self._top_model_file))
@@ -479,7 +479,7 @@ class BlendHunter(object):
         self._freeze_layers(model, 18)
 
         model.compile(loss='binary_crossentropy',
-                      optimizer=SGD(lr=1e-5, momentum=0.5),
+                      optimizer=SGD(lr=1e-6, momentum=0.5),
                       metrics=['binary_accuracy'])
 
         train_gen = self._load_generator(self._features['train']['dir'],
@@ -513,7 +513,7 @@ class BlendHunter(object):
         model.layers[17].trainable = True
 
         model.compile(loss='binary_crossentropy',
-                      optimizer=SGD(lr=1e-5, momentum=0.5),
+                      optimizer=SGD(lr=1e-6, momentum=0.5),
                       metrics=['binary_accuracy'])
 
         model.fit_generator(train_gen, steps_per_epoch=train_gen.steps,
