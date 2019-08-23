@@ -531,7 +531,7 @@ class BlendHunter(object):
 
     def train(self, input_path, get_features=True, train_top=True,
               fine_tune=True, train_dir_name='train',
-              valid_dir_name='validation', epochs_top=500, epochs_fine=50,
+              valid_dir_name='validation', epochs_top=500, epochs_fine=80,
               batch_size_top=250, batch_size_fine=16, save_bottleneck=True,
               bottleneck_file='bottleneck_features',
               save_labels=True, labels_file='labels',
