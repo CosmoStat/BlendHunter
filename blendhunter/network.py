@@ -512,7 +512,7 @@ class BlendHunter(object):
                             verbose=self._verbose)
 
         self._freeze_layers(model, 19)
-        model.layers[17].trainable = True
+        model.layers[18].trainable = True
 
         model.compile(loss='binary_crossentropy',
                       optimizer=SGD(lr=1e-6, momentum=0.3),
