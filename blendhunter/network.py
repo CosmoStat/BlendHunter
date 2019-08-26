@@ -60,6 +60,7 @@ class BlendHunter(object):
         self._final_model_file = self._format(weights_path, final_model_file)
         self._verbose = verbose
         self.history = None
+        self.history2 = None
 
     @staticmethod
     def _format(path, name):
@@ -519,15 +520,52 @@ class BlendHunter(object):
                       optimizer=SGD(lr=1e-6, momentum=0.3),
                       metrics=['binary_accuracy'])
 
-        model.fit_generator(train_gen, steps_per_epoch=train_gen.steps,
+
+        self.history2 = (model.fit_generator(train_gen, steps_per_epoch=train_gen.steps,
                             epochs=self._epochs_fine,
                             callbacks=callbacks,
                             validation_data=valid_gen,
                             validation_steps=valid_gen.steps,
-                            verbose=self._verbose)
+                            verbose=self._verbose))
 
 
         model.save_weights('{}.h5'.format(self._final_model_file))
+
+    def plot_history_tune(self):
+        """ Plot History
+
+        Plot the training history metrics.
+
+        """
+
+        sns.set(style="darkgrid")
+
+        if not isinstance(self.history2, type(None)):
+
+            plt.figure(figsize=(16, 8))
+
+            plt.subplot(121)
+            plt.plot(self.history2.history2['acc'])
+            plt.plot(self.history2.history2['val_acc'])
+            plt.title('Model Accuracy')
+            plt.ylabel('Accuracy')
+            plt.xlabel('Epoch')
+            plt.legend(['train', 'valid'], loc='upper left')
+
+            plt.subplot(122)
+            plt.plot(self.history2.history2['loss'])
+            plt.plot(self.history2.history2['val_loss'])
+            plt.title('Model Loss')
+            plt.ylabel('Loss')
+            plt.xlabel('Epoch')
+            plt.legend(['train', 'valid'], loc='upper left')
+
+            plt.show()
+
+        else:
+
+            print('No history to display. Run training first.')
+
 
 
     def train(self, input_path, get_features=True, train_top=True,
