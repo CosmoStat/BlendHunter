@@ -60,7 +60,6 @@ class BlendHunter(object):
         self._final_model_file = self._format(weights_path, final_model_file)
         self._verbose = verbose
         self.history = None
-        self.history2 = None
 
     @staticmethod
     def _format(path, name):
@@ -480,7 +479,7 @@ class BlendHunter(object):
         self._freeze_layers(model, 15)
 
         model.compile(loss='binary_crossentropy',
-                      optimizer=SGD(lr=1e-6, momentum=0.3),
+                      optimizer=Adam(lr=1e-6),
                       metrics=['binary_accuracy'])
 
         train_gen = self._load_generator(self._features['train']['dir'],
@@ -517,54 +516,20 @@ class BlendHunter(object):
         model.layers[18].trainable = True
 
         model.compile(loss='binary_crossentropy',
-                      optimizer=SGD(lr=1e-6, momentum=0.3),
+                      optimizer=Adam(lr=1e-6),
                       metrics=['binary_accuracy'])
 
 
-        self.history2 = (model.fit_generator(train_gen, steps_per_epoch=train_gen.steps,
+        model.fit_generator(train_gen, steps_per_epoch=train_gen.steps,
                             epochs=self._epochs_fine,
                             callbacks=callbacks,
                             validation_data=valid_gen,
                             validation_steps=valid_gen.steps,
-                            verbose=self._verbose))
+                            verbose=self._verbose)
 
 
         model.save_weights('{}.h5'.format(self._final_model_file))
 
-    def plot_history_tune(self):
-        """ Plot History
-
-        Plot the training history metrics.
-
-        """
-
-        sns.set(style="darkgrid")
-
-        if not isinstance(self.history2, type(None)):
-
-            plt.figure(figsize=(16, 8))
-
-            plt.subplot(121)
-            plt.plot(self.history2.history['acc'])
-            plt.plot(self.history2.history['val_acc'])
-            plt.title('Model Accuracy')
-            plt.ylabel('Accuracy')
-            plt.xlabel('Epoch')
-            plt.legend(['train', 'valid'], loc='upper left')
-
-            plt.subplot(122)
-            plt.plot(self.history2.history['loss'])
-            plt.plot(self.history2.history['val_loss'])
-            plt.title('Model Loss')
-            plt.ylabel('Loss')
-            plt.xlabel('Epoch')
-            plt.legend(['train', 'valid'], loc='upper left')
-
-            plt.show()
-
-        else:
-
-            print('No history to display. Run training first.')
 
 
 
