@@ -476,7 +476,7 @@ class BlendHunter(object):
 
         model = self._build_final_model(load_top_weights=True)
 
-        self._freeze_layers(model, 14)
+        self._freeze_layers(model, 15)
 
         model.compile(loss='binary_crossentropy',
                       optimizer=SGD(lr=1e-6, momentum=0.3),
