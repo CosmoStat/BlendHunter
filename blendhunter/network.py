@@ -454,7 +454,7 @@ class BlendHunter(object):
 
         vgg16_model = self._build_vgg16_model(self._image_shape)
         top_model = self._build_top_model(vgg16_model.output_shape[1:],
-                                          dropout=0.4)
+                                          dropout=0.6)
 
         if load_top_weights:
             top_model.load_weights('{}.h5'.format(self._top_model_file))
@@ -530,6 +530,7 @@ class BlendHunter(object):
 
 
         model.save_weights('{}.h5'.format(self._final_model_file))
+        print(history_tune1.history.keys())
 
 
 
