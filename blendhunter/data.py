@@ -44,7 +44,7 @@ class CreateTrainData(object):
 
     """
 
-    def __init__(self, images, output_path, train_fractions=(0.45, 0.45, .1),
+    def __init__(self, images, output_path, train_fractions=(0.45, 0.45, 0.1),
                  classes=('blended', 'not_blended'),
                  class_fractions=(0.5, 0.5), blend_images=True,
                  blend_fractions=(0.5, 0.5), blend_method='sf'):
@@ -284,7 +284,7 @@ class CreateTrainData(object):
 
         Save test psf to a numpy array."""
 
-        output = '/home/alice/Cosmostat/Codes/BlendHunter/bh/BlendHunterData/test/test'
+        output = '/Users/alacan/Documents/Cosmostat/Codes/BlendHunter/bh/BlendHunterData/test/test'
 
         np.save(output+'/test_psf.npy', test_psf)
 
@@ -369,7 +369,7 @@ class CreateTrainData(object):
                 test_set = np.vstack(test_set)
             self._write_images(test_set, self._test_path)
 
-    def prep_axel(self, psf, param_1, param_2, map):
+    def prep_axel(self, path_to_output, psf, param_1, param_2, map):
 
         #self.images[0] = np.random.permutation(self.images[0])
         #self.images[1] = np.random.permutation(self.images[1])
@@ -378,7 +378,7 @@ class CreateTrainData(object):
         split2 = self._split_array(self.images[1], self.train_fractions)
 
         #Split fwhm
-        train_fractions=(0.45, 0.45, .1)
+        train_fractions=(0.45, 0.45, 0.1)
         psf_split1 = CreateTrainData._split_array(psf[0], train_fractions)
         psf_split2 = CreateTrainData._split_array(psf[1], train_fractions)
 
@@ -397,6 +397,7 @@ class CreateTrainData(object):
         test_param_x = x_split[2]
         test_param_y = y_split[2]
         test_im_blended = split1[2] #blended test images
+        test_im_nb = split2[2]
         test_map = map_split[2]
 
         self._write_data_set(train_set, self._train_paths)
@@ -406,15 +407,17 @@ class CreateTrainData(object):
 
         #Save test_psf
         #_write_psf(test_psf)
-        output = '/home/alice/Cosmostat/Codes/BlendHunter/bh/BlendHunterData/test/test'
-        np.save(output+'/test_psf.npy', test_psf)
+        #output = '/Users/alacan/Documents/Cosmostat/Codes/BlendHunter/bh/BlendHunterData/test/test'
+        np.save(path_to_output+'/test_psf.npy', test_psf)
 
         #Save test_params
-        np.save(output+'/test_param_x.npy', test_param_x)
-        np.save(output+'/test_param_y.npy', test_param_y)
+        np.save(path_to_output+'/test_param_x.npy', test_param_x)
+        np.save(path_to_output+'/test_param_y.npy', test_param_y)
 
         #Save blended test images
-        np.save(output+'/gal_im_blended.npy', test_im_blended)
+        np.save(path_to_output+'/gal_im_blended.npy', test_im_blended)
+        np.save(path_to_output+'/gal_im_nb.npy', test_im_nb)
+        np.save(path_to_output+'/test_images.npy', test_set)
 
         #Save seg_map
-        np.save(output+'/test_seg_map.npy', test_map)
+        np.save(path_to_output+'/test_seg_map.npy', test_map)
