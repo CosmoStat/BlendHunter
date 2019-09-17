@@ -1,30 +1,48 @@
 import numpy as np
 import sys
+import modopt
+from modopt.signal.noise import add_noise
 
-bh_path = ('/home/alice/Cosmostat/Codes/BlendHunter')
+bh_path = ('/Users/alacan/Documents/Cosmostat/Codes/BlendHunter')
 sys.path.extend([bh_path])
 
 from blendhunter.data import CreateTrainData
 
-
+#Function to get images
 def get_images(sample):
 
     return np.array([sample[obj]['galsim_image'][0].array for obj in
                      range(sample.size)])
 
-# def get_pos(sample):
-#
-#     sample[obj]['galsim_image'][0]
+#Second function to obtain noisy images
+def get_images_noisy(sample):
 
+    return np.array([sample[obj]['galsim_image_noisy'] for obj in
+                     range(sample.size)])
 
-path = '/home/alice/Cosmostat/Codes/BlendHunter'
-input = path + '/axel_sims'
+#Paths for datasets with different sigma_noise
+path = '/Users/alacan/Documents/Cosmostat/Codes/BlendHunter'
+input = path + '/axel_sims/larger_dataset'
 output = path + '/bh'
+output2 = path + '/bh_5'
+output3 = path + '/bh_14'
+output4 = path + '/bh_18'
+output5 = path + '/bh_22'
+output6 = path + '/bh_26'
+output7 = path + '/bh_35'
+output8 = path + '/bh_40'
 
 
 #Getting the images
 blended = np.load(input + '/blended/gal_obj_0.npy', allow_pickle=True)
 not_blended = np.load(input + '/not_blended/gal_obj_0.npy', allow_pickle=True)
+
+#Add noise to images and store it in dict
+for i in range(len(blended)):
+    blended[i]['galsim_image_noisy'] = add_noise(blended[i]['galsim_image'][0].array, sigma = 35.0)
+for i in range(len(not_blended)):
+    not_blended[i]['galsim_image_noisy'] = add_noise(not_blended[i]['galsim_image'][0].array, sigma = 35.0)
+
 
 #Getting the psf (fwhm)
 fwhm_blended = np.array([blended[val]['PSF']['fwhm'] for val in range(blended.size)])
@@ -44,6 +62,13 @@ sm = [np.array([blended[val]['seg_map'][0].array for val in range(blended.size)]
 #shift_params = [np.reshape(shift_params, (10000,1))]
 #shift_params = [np.concatenate((param_x, param_y), axis=1)]
 
-images = [get_images(sample) for sample in (blended, not_blended)]
+images = [get_images_noisy(sample) for sample in (blended, not_blended)]
 
-CreateTrainData(images, output).prep_axel(fwhm, param_x, param_y, sm)
+#images_noisy = [add_noise(images[i], sigma = 22.0) for i in range(len(images))]
+
+#Save noisy images for comparison w/ Sextractor
+np.save(output7+'/blended_noisy.npy', blended)
+np.save(output7+'/not_blended_noisy.npy', not_blended)
+
+
+#CreateTrainData(images, output8).prep_axel(output8, fwhm, param_x, param_y, sm)
