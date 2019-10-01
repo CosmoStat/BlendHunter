@@ -122,7 +122,7 @@ class CreateTrainData(object):
     def _get_slices(array, fractions):
         """ Get Slices
 
-        This method converts sample fractions into slice elemets for a given
+        This method converts sample fractions into slice elements for a given
         array.
 
         Parameters
@@ -369,7 +369,8 @@ class CreateTrainData(object):
                 test_set = np.vstack(test_set)
             self._write_images(test_set, self._test_path)
 
-    def prep_axel(self, path_to_output, psf, param_1, param_2, map):
+    def prep_axel(self, path_to_output=None, psf=None, param_1 = None, param_2=None, map=None):
+        # Can add parameters : psf, param_1, param_2, map
 
         #self.images[0] = np.random.permutation(self.images[0])
         #self.images[1] = np.random.permutation(self.images[1])
@@ -406,8 +407,6 @@ class CreateTrainData(object):
         self._write_images(np.vstack(test_set), self._test_path)
 
         #Save test_psf
-        #_write_psf(test_psf)
-        #output = '/Users/alacan/Documents/Cosmostat/Codes/BlendHunter/bh/BlendHunterData/test/test'
         np.save(path_to_output+'/test_psf.npy', test_psf)
 
         #Save test_params
