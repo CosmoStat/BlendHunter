@@ -378,7 +378,7 @@ class CreateTrainData(object):
         split1 = self._split_array(self.images[0], self.train_fractions)
         split2 = self._split_array(self.images[1], self.train_fractions)
 
-        #Split fwhm
+        #Split fwhm 
         train_fractions=(0.45, 0.45, 0.1)
         psf_split1 = CreateTrainData._split_array(psf[0], train_fractions)
         psf_split2 = CreateTrainData._split_array(psf[1], train_fractions)
