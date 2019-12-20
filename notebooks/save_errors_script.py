@@ -1,31 +1,39 @@
 import numpy as np
-import pandas as pd
-import matplotlib.pyplot as plt
-import matplotlib.image as mimage
-import seaborn as sns
 
-#Import results
-testpath ='/Users/lacan/Documents/Cosmostat/Codes/BlendHunter'
-#testpath ='/Users/alacan/Documents/Cosmostat/Codes/BlendHunter'
-path_results = testpath+'/bh/bh_results'
+from annex_new import import_
+from annex_new import get_distance
+from annex_new import get_bh_errors
+from annex_new import get_sep_errors
+from annex_new import get_distance_errors
+from annex_new import count_per_bin
+from annex_new import get_bh_results
+from annex_new import get_sep_results
+
+from os.path import expanduser
+user_home = expanduser("~")
+path = user_home+'/Documents/Cosmostat/Codes/BlendHunter'
 
 #Different noise realisations
-sigmas = np.array([[5,51,52 ,53, 54],[14,141,142,143,144], [18,181,182,183,184],
-                  [26,261,262,263,264], [35,351,352,353,354], [40,401,402,403,404]])
+sigmas = [5,14,18,26,35,40]
+noise_realisation = ['',1,2,3,4]
+datasets = [[str(j)+str(i) for i in noise_realisation]  for j in sigmas]
 
-#Import function
-def import_(path):
-    img = np.load(path, allow_pickle=True)
-    return img
 
-def mb_(data=None): #Missed blends
-    return len(np.where(data[0:4000] == 0)[0])
+def mb_(data=None, sep=False): #Missed blends
+    if sep:
+        return len(np.where(data[0:4000] == 0)[0])
+    else:
+        return len(np.where(data[0:4000] != 'blended')[0])
 
-def fp_(data=None): #Single galaxy mistaken for a blend
-    return len(np.where(data[4000:8000] == 1)[0])
+def fp_(data=None, sep=False): #Single galaxy mistaken for a blend
+    if sep:
+        return len(np.where(data[4000:8000] == 1)[0])
+    else:
+        return len(np.where(data[4000:8000] != 'not_blended')[0])
 
 def uni_(data=None): #Unidentified by SExtractor
     return len(np.where(data[0:4000] == 16)[0])+len(np.where(data[4000:8000] == 16)[0])
+
 
 ####Separated objects
 def sep_(data=None, sep_results= False, dist=distance): 
@@ -54,83 +62,56 @@ def get_mean(data=None):
 def get_std(data=None):
     return np.std(data)
 
-#Import bh results
-results5 = [np.load(path_results+'/pred_{}.npy'.format(i), allow_pickle = True) for i in sigmas[0]]
-results14 = [np.load(path_results+'/pred_{}.npy'.format(i), allow_pickle = True) for i in sigmas[1]]
-results18 = [np.load(path_results+'/pred_{}.npy'.format(i), allow_pickle = True) for i in sigmas[2]]
-results26 = [np.load(path_results+'/pred_{}.npy'.format(i), allow_pickle = True) for i in sigmas[3]]
-results35 = [np.load(path_results+'/pred_{}.npy'.format(i), allow_pickle = True) for i in sigmas[4]]
-results40 = [np.load(path_results+'/pred_{}.npy'.format(i), allow_pickle = True) for i in sigmas[5]]
 
-#Paths flags for sep results
-paths_flags5 = np.array([testpath+'/sep_results_8000/flags{}.npy'.format(i) for i in sigmas[0]])
-paths_flags14 = np.array([testpath+'/sep_results_8000/flags{}.npy'.format(i) for i in sigmas[1]])
-paths_flags18 = np.array([testpath+'/sep_results_8000/flags{}.npy'.format(i) for i in sigmas[2]])
-paths_flags26 = np.array([testpath+'/sep_results_8000/flags{}.npy'.format(i) for i in sigmas[3]])
-paths_flags35 = np.array([testpath+'/sep_results_8000/flags{}.npy'.format(i) for i in sigmas[4]])
-paths_flags40 = np.array([testpath+'/sep_results_8000/flags{}.npy'.format(i) for i in sigmas[5]])
-
-#Import sep results
-flags5 = [import_(paths_flags5[j]) for j in range(5)]
-flags14 = [import_(paths_flags14[j]) for j in range(5)]
-flags18 = [import_(paths_flags18[j]) for j in range(5)]
-flags26 = [import_(paths_flags26[j]) for j in range(5)]
-flags35 = [import_(paths_flags35[j]) for j in range(5)]
-flags40 = [import_(paths_flags40[j]) for j in range(5)]
-
-#Results list
-results_bh = [results5, results14, results18, results26, results35, results40]
-results_sep = [flags5, flags14,flags18, flags26, flags35,flags40]
+#Results
+bh_results = get_bh_results(path_bh_results = path+'/bh_results')
+sep_results = get_sep_results(path_sep_results = path+'/sep_results_8000')
 
 #Import distance between galaxies
-param_x = np.load(testpath+"/bh/param_x_total.npy", allow_pickle=True)[36000:40000] #X parameter extracted from test images
-
-param_y = np.load(testpath+"/bh/param_y_total.npy", allow_pickle=True)[36000:40000] #Y parameter extracted from test images
-
-distance = np.sqrt(param_x**2 + param_y**2)
-distance = np.array([distance[i][0] for i in range(len(distance))])
-
+distance = get_distance(path=path+'/bh')
 
 #####Missed blends and false positives for bh and sep
-#Blendhunter
-mb = [[len(np.where(data[j][0:4000] != 'blended')[0]) for j in range(5)] for data in results_bh]
-fp = [[len(np.where(data[j][4000:8000] != 'not_blended')[0]) for j in range(5)] for data in results_bh]
-#SExtractor
-mb_sep = [[mb_(data=flags[i]) for i in range(len(flags))] for flags in results_sep]
-fp_sep = [[fp_(data=flags[i]) for i in range(len(flags))] for flags in results_sep]
-uni_sep = [[uni_(data=flags[i]) for i in range(len(flags))] for flags in results_sep]
+bh_mb = [[mb_(data=x[j]) for j in range(len(x))] for x in bh_results]
+sep_mb = [[mb_(data=x[j], sep=True) for j in range(len(x))] for x in sep_results]
+
+bh_fp = [[fp_(data=x[j]) for j in range(len(x))] for x in bh_results]
+sep_fp = [[fp_(data=x[j], sep=True) for j in range(len(x))] for x in sep_results]
+
+#Unidentified objects by sep
+sep_uni = [[uni_(data=x[j]) for j in range(len(x))] for x in sep_results]
+
 
 #####Separated, close and overlapping objects in errors
 #Blendhunter
-sep_obj = [[sep_(data[k]) for k in range(len(data))] for data in results_bh]
-cls_obj = [[cls_(data[k]) for k in range(len(data))] for data in results_bh]
-ovlps_obj= [[ovlps(data[k]) for k in range(len(data))] for data in results_bh]
+sep_obj = [[sep_(data[k]) for k in range(len(data))] for data in bh_results]
+cls_obj = [[cls_(data[k]) for k in range(len(data))] for data in bh_results]
+ovlps_obj= [[ovlps(data[k]) for k in range(len(data))] for data in bh_results]
 
 #SExtractor
-sep_sep = [[sep_(data=flags[i], sep_results=True) for i in range(len(flags))] for flags in results_sep]
-cls_sep = [[cls_(data=flags[i], sep_results=True) for i in range(len(flags))] for flags in results_sep]
-ovlps_sep = [[ovlps_(data=flags[i], sep_results=True) for i in range(len(flags))] for flags in results_sep]
+sep_sep = [[sep_(data=flags[i], sep_results=True) for i in range(len(flags))] for flags in sep_results]
+cls_sep = [[cls_(data=flags[i], sep_results=True) for i in range(len(flags))] for flags in sep_results]
+ovlps_sep = [[ovlps_(data=flags[i], sep_results=True) for i in range(len(flags))] for flags in sep_results]
 
 ##########Get means and std deviation for error bars
 
 #########MB and FP
-means_mb_bh = [get_mean(data=i) for i in mb]
-std_mb_bh = [get_std(data=i) for i in mb]
+means_mb_bh = [get_mean(data=i) for i in bh_mb]
+std_mb_bh = [get_std(data=i) for i in bh_mb]
 
-means_fp_bh = [get_mean(data=i) for i in fp]
-std_fp_bh = [get_std(data=i) for i in fp]
+means_fp_bh = [get_mean(data=i) for i in bh_fp]
+std_fp_bh = [get_std(data=i) for i in bh_fp]
 
-means_mb_sep = [get_mean(data=i) for i in mb_sep]
-std_mb_sep = [get_std(data=i) for i in mb_sep]
+means_mb_sep = [get_mean(data=i) for i in sep_mb]
+std_mb_sep = [get_std(data=i) for i in sep_mb]
 
-means_fp_sep = [get_mean(data=i) for i in fp_sep]
-std_fp_sep = [get_std(data=i) for i in fp_sep]
+means_fp_sep = [get_mean(data=i) for i in sep_fp]
+std_fp_sep = [get_std(data=i) for i in sep_fp]
 
-means_uni_sep = [get_mean(data=i) for i in uni_sep]
-std_uni_sep = [get_std(data=i) for i in uni_sep]
+means_uni_sep = [get_mean(data=i) for i in sep_uni]
+std_uni_sep = [get_std(data=i) for i in sep_uni]
 
 
-########SEP, CLOSE and OVERLAPS
+########SEPERATED, CLOSE and OVERLAPS
 means_sep_bh = [get_mean(data=i) for i in sep_obj]
 std_sep_bh = [get_std(data=i) for i in sep_obj]
 
@@ -148,7 +129,6 @@ std_cls_sep = [get_std(data=i) for i in cls_sep]
 
 means_ovlps_sep = [get_mean(data=i) for i in ovlps_sep]
 std_ovlps_sep = [get_std(data=i) for i in ovlps_sep]
-
 
 
 ##### SAVE RESULTS (create 'errors_stats' folder)
