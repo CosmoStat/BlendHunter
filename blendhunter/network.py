@@ -282,8 +282,6 @@ class BlendHunter(object):
         model.add(Dense(dense_output[0]))
         model.add(Dropout(dropout))
         model.add(Dense(dense_output[1], activation='relu'))
-        model.add(Dropout(dropout))
-        model.add(Dense(dense_output[2], activation='relu'))
         model.add(Dense(1, activation='sigmoid'))
 
         return model
