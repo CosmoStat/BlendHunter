@@ -1,7 +1,9 @@
 import numpy as np
 import sys
+from os.path import expanduser
+user_home = expanduser("~")
 
-bh_path = ('/Users/alacan/Documents/Cosmostat/Codes/BlendHunter')
+bh_path = (user_home+'/Documents/Cosmostat/Codes/BlendHunter')
 sys.path.extend([bh_path])
 
 from blendhunter import BlendHunter
@@ -37,34 +39,16 @@ def get_results(paths_list=None, n_path=None, sigma_value=None):
 
     return results_dict
 
-path_bh = '/Users/alacan/Documents/Cosmostat/Codes/BlendHunter'
-path_shift =path_bh + '/more_noise_ranges'
-path3 = path_shift+'/bh_3'
-path5 = path_bh+'/bh_5'
-path7 = path_shift+'/bh_7'
-path10 = path_shift+'/bh_10'
-path12 = path_shift+'/bh_12'
-path14 = path_bh+'/bh_14'
-path16 = path_shift+'/bh_16'
-path18 = path_bh+'/bh_18'
-path20 = path_shift+'/bh_20'
-path22 = path_bh+'/bh_22'
-path24 = path_shift+'/bh_24'
-path26 = path_bh+'/bh_26'
-path28 = path_shift+'/bh_28'
-path30 = path_shift+'/bh_30'
-path32 = path_shift+'/bh_32'
-path35 = path_bh+'/bh_35'
-path37 = path_shift+'/bh_37'
-path40 = path_bh+'/bh_40'
-path42 = path_shift+'/bh_42'
-path44 = path_shift+'/bh_44'
+#Check the folder hierarchy
+path_bh = user_home+'/Documents/Cosmostat/Codes/BlendHunter'
+path_shift = path_bh + '/more_noise_ranges'
 
-paths = [path3, path5, path7, path10, path12, path14, path16, path18,path20, path22, path24, path26, path28, path30, path32, path35, path37, path40, path42, path44]
-nb_path =[3,5,7,10, 12, 14, 16,18,20,22,24,26,28,30,32,35,37,40,42, 44]
+paths = [path_bh+'/bh_'str(i)  for i in [3,5,7,10,12,14,16,18,20,22,24,26,28,30,32,35,37,40,42,44]]
 
-#Retrieve results for each set of weights
-results_weights40_3 = get_results(paths_list=paths, n_path=nb_path, sigma_value=403)
+for i in [5,14,18,26,35,40]:
+    for j in [1,2,3,4]:
+        #Retrieve results for each set of weights
+        results_weights = get_results(paths_list=paths, n_path=[3,5,7,10,12,14,16,18,20,22,24,26,28,30,32,35,37,40,42,44])
 
-#Save dictionary
-np.save('/Users/alacan/Documents/Cosmostat/Codes/BlendHunter/acc_weights40_3.npy', results_weights40_3)
+        #Save dictionary
+        np.save(user_home+'/Documents/Cosmostat/Codes/BlendHunter/acc_weights{}.npy'.format(str(i)+str(j)), results_weights)
