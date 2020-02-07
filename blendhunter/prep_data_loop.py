@@ -68,6 +68,7 @@ path = user_home+'/Documents/Cosmostat/Codes/BlendHunter'
 input = path + '/axel_sims/larger_dataset'
 
 """Datasets are called bh_+ the noise level + the number of noise realisation"""
+output_pad = path + '/bh_pad{}'
 output = path + '/bh_{}'
 
 #Getting the simulations
@@ -80,7 +81,18 @@ for j in [5, 14, 18, 26, 35, 40]:
         #Get images
         images = [get_images(sample, add_padding_noise = True, sigma_noise=j) for sample in (blended, not_blended)]
         #Save noisy test images for comparison w/ SExtractor
-        np.save(output.format(str(j)+str(i))+'/blended_noisy{}.npy'.format(str(j)+str(i)), blended[36000:40000])
-        np.save(output.format(str(j)+str(i))+'/not_blended_noisy{}.npy'.format(str(j)+str(i)), not_blended[36000:40000])
+        np.save(output_pad.format(str(j)+str(i))+'/blended_noisy{}.npy'.format(str(j)+str(i)), blended[36000:40000])
+        np.save(output_pad.format(str(j)+str(i))+'/not_blended_noisy{}.npy'.format(str(j)+str(i)), not_blended[36000:40000])
         #Train-valid-test split
-        CreateTrainData(images, output.format(str(j)+str(i))).prep_axel(path_to_output=output.format(str(j)+str(i)))
+        CreateTrainData(images, output_pad.format(str(j)+str(i))).prep_axel(path_to_output=output_pad.format(str(j)+str(i)))
+
+"""Loop to split non padded images in train-valid-test"""
+#for j in [5, 14, 18, 26, 35, 40]:
+#    for i in ['',1,2,3,4]:
+        #Get images
+#        images = [get_images(sample, add_noise_img=True, sigma_noise=j) for sample in (blended, not_blended)]
+        #Save noisy test images for comparison w/ SExtractor
+#        np.save(output.format(str(j)+str(i))+'/blended_noisy{}.npy'.format(str(j)+str(i)), blended[36000:40000])
+#        np.save(output.format(str(j)+str(i))+'/not_blended_noisy{}.npy'.format(str(j)+str(i)), not_blended[36000:40000])
+        #Train-valid-test split
+#        CreateTrainData(images, output.format(str(j)+str(i))).prep_axel(path_to_output=output.format(str(j)+str(i)))
