@@ -10,9 +10,10 @@ user_home = expanduser("~")
 bh_path = (user_home+'/Documents/Cosmostat/Codes/BlendHunter')
 sys.path.extend([bh_path])
 
+#Import the class to split into train-valid-test
 from blendhunter.data import CreateTrainData
 
-#Function to calculate the amount of noise to add according to signal
+#Function to calculate the amount of noise to add according to signal (for tests on fixed SNR)
 def noise_to_add(img=None, SNR_=None, map=None):
     #Calculate std of central object signal
     signal = np.sum(img[map == 1]**2)
@@ -22,6 +23,10 @@ def noise_to_add(img=None, SNR_=None, map=None):
 
 #Function to get images
 def get_images(sample, add_noise_img = False, sigma_noise = None, add_padding_noise=False, fixed_snr = False, SNR_target=None, seg_map=None):
+    """1. To pad with noise, use 'add_padding_noise=True' + 'sigma_noise'
+       2. To simply add noise, use 'add_noise_img=True' + 'sigma_noise'
+       3. To create datasets with fixed SNR according to signal use 'fixed_snr=True' + 'SNR_target'
+       4. Otherwise, the function retrieves non noisy simulations by default"""
 
     if add_noise_img:
         #Add noise to image and store array in dict
@@ -59,22 +64,22 @@ def get_images(sample, add_noise_img = False, sigma_noise = None, add_padding_no
 
 #Paths for datasets with different sigma_noise
 path = user_home+'/Documents/Cosmostat/Codes/BlendHunter'
-
+#Path for simulations
 input = path + '/axel_sims/larger_dataset'
-input_real = path + '/axel_sims/deblending_real'
 
-#Dataset called bh_+ the noise level + the number of noise realisation
+"""Datasets are called bh_+ the noise level + the number of noise realisation"""
 output = path + '/bh_{}'
 
-#Getting the images
+#Getting the simulations
 blended = np.load(input+ '/blended/gal_obj_0.npy', allow_pickle=True)
 not_blended = np.load(input+ '/not_blended/gal_obj_0.npy', allow_pickle=True)
 
+"""Loop to split padded and noisy datasets in train-valid-test"""
 for j in [5, 14, 18, 26, 35, 40]:
-    for i in [1,2,3,4]:
+    for i in ['',1,2,3,4]:
         #Get images
         images = [get_images(sample, add_padding_noise = True, sigma_noise=j) for sample in (blended, not_blended)]
-        #Save noisy images for comparison w/ SExtractor
+        #Save noisy test images for comparison w/ SExtractor
         np.save(output.format(str(j)+str(i))+'/blended_noisy{}.npy'.format(str(j)+str(i)), blended[36000:40000])
         np.save(output.format(str(j)+str(i))+'/not_blended_noisy{}.npy'.format(str(j)+str(i)), not_blended[36000:40000])
         #Train-valid-test split
