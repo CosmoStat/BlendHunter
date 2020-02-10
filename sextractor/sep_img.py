@@ -1,4 +1,4 @@
-"""Running SExtractor on padded noisy images"""
+"""Running SExtractor on non padded noisy images"""
 
 import numpy as np
 
@@ -15,7 +15,7 @@ MISS_EXTRACTION = 16
 #Check the folder hierarchy
 from os.path import expanduser
 user_home = expanduser("~")
-path = user_home+'/Cosmostat/Codes/BlendHunter'
+testpath = user_home+'/Cosmostat/Codes/BlendHunter'
 
 def extract_test_images(path):
     img = np.load(path, allow_pickle=True)
@@ -46,7 +46,7 @@ def sep_results(blends=None,no_blends=None, sigma_val=None,path=None):
 
     """Make sure the 'sep_results_pad' folder exists"""
     #save
-    np.save(path+'/sep_results_pad/flags_pad{}.npy'.format(sigma_val), flags)
+    np.save(path+'/sep_results/flags{}.npy'.format(sigma_val), flags)
     #np.save(path+'/sep_results_pad/sep_res{}.npy'.format(sigma_val), sep_res)
     print('Sep Accuracy (sigma_noise = {}): {}%'.format(sigma_val, acc*100))
     n_miss = (len(np.where(flags_b == 16)[0])+len(np.where(flags_nb == 16)[0]))/(len(flags_b)+len(flags_nb))
@@ -61,8 +61,8 @@ noise_realisation = ['',1,2,3,4]
 datasets = [[str(j)+str(i) for i in noise_realisation]  for j in sigmas]
 
 #Paths to retrieve test blended and not blended images extracted from the prep_data_loop.py script
-paths = [[[path+'/bh_pad{}/blended_noisy{}.npy'.format(i,i) for i in datasets[j]],
-        [path+'/bh_pad{}/not_blended_noisy{}.npy'.format(i,i) for i in datasets[j]]] for j in range(len(datasets))]
+paths = [[[testpath+'/bh_{}/blended_noisy{}.npy'.format(i,i) for i in datasets[j]],
+        [testpath+'/bh_{}/not_blended_noisy{}.npy'.format(i,i) for i in datasets[j]]] for j in range(len(datasets))]
 
 #Getting the test images
 blended = [[import_(paths[i][0][k]) for k in range(len(noise_realisation))] for i in range(len(sigmas))]
@@ -71,4 +71,4 @@ not_blended = [[import_(paths[i][1][k]) for k in range(len(noise_realisation))] 
 ####Run sep
 for i in range(len(sigmas)):
     for j,k in zip(range(len(noise_realisation)), datasets[i]):
-        sep_results(blends= blended[i][j], no_blends= not_blended[i][j], sigma_val = k , path = path)
+        sep_results(blends= blended[i][j], no_blends= not_blended[i][j], sigma_val = k , path = testpath)
