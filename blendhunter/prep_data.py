@@ -8,7 +8,7 @@ from os.path import expanduser
 user_home = expanduser("~")
 
 #Check the folder hierarchy
-bh_path = (user_home+'/Documents/Cosmostat/Codes/BlendHunter')
+bh_path = (user_home+'/Cosmostat/Codes/BlendHunter')
 sys.path.extend([bh_path])
 
 from blendhunter.data import CreateTrainData
@@ -60,7 +60,7 @@ def get_images(sample, add_noise_img = False, sigma_noise = None, add_padding_no
 
 
 #Paths for datasets with different sigma_noise
-path = user_home+'/Documents/Cosmostat/Codes/BlendHunter'
+path = user_home+'/Cosmostat/Codes/BlendHunter'
 
 input = path + '/axel_sims/larger_dataset'
 input_real = path + '/axel_sims/deblending_real'
