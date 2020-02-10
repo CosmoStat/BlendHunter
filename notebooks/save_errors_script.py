@@ -13,7 +13,7 @@ from annex_new import get_sep_results
 """Check folders hierarchy"""
 from os.path import expanduser
 user_home = expanduser("~")
-path = user_home+'/Documents/Cosmostat/Codes/BlendHunter'
+path = user_home+'/Cosmostat/Codes/BlendHunter'
 
 #Different noise realisations
 sigmas = [5,14,18,26,35,40]
@@ -40,7 +40,7 @@ def uni_(data=None): #Unidentified by SExtractor
 
 
 """Separated objects"""
-def sep_(data=None, sep_results= False, dist=distance): 
+def sep_(data=None, sep_results= False, dist=distance):
     if sep_results:
         return len([i for i in np.where(data[0:4000] != 1)[0] if distance[i] > 20.0])
     else:
@@ -70,10 +70,10 @@ def get_std(data=None):
 
 """Retrieve results"""
 bh_results = get_bh_results(path_bh_results = path+'/bh_results')
-sep_results = get_sep_results(path_sep_results = path+'/sep_results_8000')
+sep_results = get_sep_results(path_sep_results = path+'/sep_results')
 
 """Compute distance between galaxies"""
-distance = get_distance(path=path+'/bh')
+distance = get_distance(path=path)
 
 """Missed blends and false positives for bh and sep"""
 bh_mb = [[mb_(data=x[j]) for j in range(len(x))] for x in bh_results]

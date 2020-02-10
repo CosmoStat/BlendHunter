@@ -49,15 +49,15 @@ def get_distance(path):
 """Get ellipticity components"""
 def get_ellipticity(path = None, get_e1=False, get_e2=False):
     if get_e1:
-        e1 = np.load(path+"/bh/e1_total.npy", allow_pickle=True)      
+        e1 = np.load(path+"/e1_total.npy", allow_pickle=True)      
         return e1
     
     if get_e2:
-        e2 = np.load(path+"/bh/e2_total.npy", allow_pickle=True)[36000:40000]
+        e2 = np.load(path+"/e2_total.npy", allow_pickle=True)[36000:40000]
         return e2
     else:
-        e1 = np.load(path+"/bh/e1_total.npy", allow_pickle=True)
-        e2 = np.load(path+"/bh/e2_total.npy", allow_pickle=True)[36000:40000]
+        e1 = np.load(path+"/e1_total.npy", allow_pickle=True)
+        e2 = np.load(path+"/e2_total.npy", allow_pickle=True)[36000:40000]
         
         return e1, e2  
     
@@ -82,6 +82,16 @@ def get_sep_errors(results=None, get_false_positives=False, get_unidentified=Fal
     else:
         return np.where(results[0:4000] != 1)[0]
 
+    
+"""Get accuracy for bh"""
+def get_acc_bh(results=None, path=None):
+    true = np.load(path + '/labels.npy', allow_pickle=True)
+    return np.sum(results == true)/true.size
+    
+"""Get accuracy for bh"""
+def get_acc_sep(results=None):
+    return (len(np.where(results[0:4000] == 1)[0])+len(np.where(results[4000:8000] == 0)[0]))/(len(results[0:4000])+len(results[4000:8000]))
+    
     
 """Get distance for missed blends by bh and sep"""
 def get_distance_errors(distances=None, errors=None):

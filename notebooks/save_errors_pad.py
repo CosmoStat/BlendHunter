@@ -13,7 +13,7 @@ from annex_new import get_sep_results
 """Check folders hierarchy"""
 from os.path import expanduser
 user_home = expanduser("~")
-path = user_home+'/Documents/Cosmostat/Codes/BlendHunter'
+path = user_home+'/Cosmostat/Codes/BlendHunter'
 
 #Different noise realisations
 sigmas = [5,14,18,26,35,40]
@@ -28,19 +28,19 @@ def mb_(data=None, sep=False): #Missed blends
         return len(np.where(data[0:4000] != 'blended')[0])
 
 """Retrieve false positive(single galaxy mistaken for a blend)"""
-def fp_(data=None, sep=False): 
+def fp_(data=None, sep=False):
     if sep:
         return len(np.where(data[4000:8000] == 1)[0])
     else:
         return len(np.where(data[4000:8000] != 'not_blended')[0])
 
 """Retrieve unidentified objects by sextractor"""
-def uni_(data=None): 
+def uni_(data=None):
     return len(np.where(data[0:4000] == 16)[0])+len(np.where(data[4000:8000] == 16)[0])
 
 
 """Separated objects"""
-def sep_(data=None, sep_results= False, dist=None): 
+def sep_(data=None, sep_results= False, dist=None):
     if sep_results:
         return len([i for i in np.where(data[0:4000] != 1)[0] if distance[i] > 20.0])
     else:
@@ -72,7 +72,7 @@ bh_pad = get_bh_results(path_bh_results =path+'/bh_pad_results', pad_images=True
 sep_pad = get_sep_results(path_sep_results =path+'/sep_pad_results', pad_images=True)
 
 """ Compute distance between galaxies"""
-distance = get_distance(path=path+'/bh')
+distance = get_distance(path=path)
 
 """Missed blends and false positives for bh and sep"""
 bh_mb = [[mb_(data=x[j]) for j in range(len(x))] for x in bh_pad]
@@ -169,4 +169,3 @@ np.save(path+'/errors_stats_pad/means_ovlps_sep_pad.npy', means_ovlps_sep)
 np.save(path+'/errors_stats_pad/std_sep_sep_pad.npy', std_sep_sep)
 np.save(path+'/errors_stats_pad/std_cls_sep_pad.npy', std_cls_sep)
 np.save(path+'/errors_stats_pad/std_ovlps_sep_pad.npy', std_ovlps_sep)
-
