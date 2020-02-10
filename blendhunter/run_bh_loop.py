@@ -4,7 +4,7 @@ from os.path import expanduser
 user_home = expanduser("~")
 
 #Check the folder hierarchy
-bh_path = (user_home+'/Documents/Cosmostat/Codes/BlendHunter')
+bh_path = (user_home+'/Cosmostat/Codes/BlendHunter')
 sys.path.extend([bh_path])
 
 """Set plaidml backend for Keras before importing blendhunter"""
@@ -18,9 +18,9 @@ from blendhunter import BlendHunter
 for j in [5, 14, 18, 26, 35, 40]:
     for i in ['', 1,2,3,4]:
         #Make sure to check the folder hierarchy
-        path = user_home+'/Documents/Cosmostat/Codes/BlendHunter/bh_pad{}'.format(str(j)+str(i))
+        path = user_home+'/Cosmostat/Codes/BlendHunter/bh_{}'.format(str(j)+str(i))
         #For non padded images
-        #path = user_home+'/Documents/Cosmostat/Codes/BlendHunter/bh_{}'.format(str(j)+str(i))
+        #path = user_home+'/Cosmostat/Codes/BlendHunter/bh_{}'.format(str(j)+str(i))
         """Make sure each bh folder contains a 'weights' folder"""
         bh = BlendHunter(weights_path=path + '/weights')
 
@@ -43,6 +43,6 @@ for j in [5, 14, 18, 26, 35, 40]:
         #Save history and results
         #Make sure to check the folder hierarchy
         np.save(path+'/BlendHunterData/test/test/history.npy', hist)
-        np.save(user_home+'/Documents/Cosmostat/Codes/BlendHunter/bh_pad_results/preds_pad{}.npy'.format(str(j)+str(i)), pred_top)
+        np.save(user_home+'/Cosmostat/Codes/BlendHunter/bh_results/preds{}.npy'.format(str(j)+str(i)), pred_top)
         #For non padded images
-        #np.save(user_home+'/Documents/Cosmostat/Codes/BlendHunter/bh_results/preds_{}.npy'.format(str(j)+str(i)), pred_top)
+        #np.save(user_home+'/Cosmostat/Codes/BlendHunter/bh_results/preds_{}.npy'.format(str(j)+str(i)), pred_top)

@@ -1,7 +1,7 @@
 import numpy as np
 import sys
 
-bh_path = ('/Users/alacan/Documents/Cosmostat/Codes/BlendHunter')
+bh_path = ('/Users/alacan/Cosmostat/Codes/BlendHunter')
 sys.path.extend([bh_path])
 
 # Set plaidml backend for Keras before importing blendhunter
@@ -13,7 +13,7 @@ from os.path import expanduser
 user_home = expanduser("~")
 
 #Make sure to check the folder hierarchy
-path = user_home+'/Documents/Cosmostat/Codes/BlendHunter/bh_'
+path = user_home+'/Cosmostat/Codes/BlendHunter/bh_'
 
 bh = BlendHunter(weights_path=path + '/weights')
 
@@ -36,4 +36,4 @@ print("Error Top", np.sum(pred_top != true) / true.size)
 #Save results
 #np.save(path+'/BlendHunterData/test/test/history.npy', hist)
 np.save(path+'/BlendHunterData/test/test/pred.npy', pred_top)
-#np.save('/Users/alacan/Documents/Cosmostat/Codes/BlendHunter/bh/BlendHunterData/test/test/pred_finetune.npy', pred_fine)
+#np.save('/Users/alacan/Cosmostat/Codes/BlendHunter/bh/BlendHunterData/test/test/pred_finetune.npy', pred_fine)
