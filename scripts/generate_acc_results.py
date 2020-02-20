@@ -1,37 +1,21 @@
 #! /usr/bin/env python
 # -*- coding: utf-8 -*-
 
+"""SCRIPT NAME
+
+This module contains methods for making plots.
+
+:Author: Samuel Farrens <samuel.farrens@cea.fr>
+
+:Credits: Alice Lacan
+
+"""
+
 import numpy as np
+from utils import load, DataHandler
 
 
-def load(path, limits=None):
-    """Load
-
-    Load numpy binary with allow_pickle set to True.
-
-    Parameters
-    ----------
-    path : str
-        Path to file
-    limits : tuple, optional
-        Range of values to keep
-
-    Returns
-    -------
-    numpy.ndarray
-        Array loaded from numpy binary
-
-    """
-
-    data = np.load(path, allow_pickle=True)
-
-    if limits:
-        data = data[slice(*limits)]
-
-    return data
-
-
-class GetAcc:
+class GetAcc(DataHandler):
     """Get Accuracy
 
     Class to calculate the average classification accuracy for a range of noise
@@ -56,41 +40,14 @@ class GetAcc:
                  prefix='preds', n_noise_reals=5):
 
         self.path = path
-        self.sigma_values = sigma_values
         self.labels = labels
         self.param_x = param_x
         self.param_y = param_y
         self.prefix = prefix
-        self.noise_reals = np.array([''] + list(range(1, n_noise_reals)))
-        self._load_datasets()
+        self._out_shape = (sigma_values.size, n_noise_reals)
+        super().__init__(path)
         self._get_stats()
         self._get_acc_wrt_dist()
-
-    def _load_dataset(self, sigma, real, limits=None):
-        """Load Dataset
-
-        Parameters
-        ----------
-        sigma : float
-            Noise standard deviation
-        real : int
-            Realisation index
-
-        Returns
-        -------
-        numpy.ndarray
-            Array loaded from numpy binary
-
-        """
-
-        return load('{}/{}{}{}.npy'.format(self.path, self.prefix, int(sigma),
-                    real))
-
-    def _load_datasets(self):
-
-        self.datasets = [self._load_dataset(sigma, real)
-                         for sigma in self.sigma_values
-                         for real in self.noise_reals]
 
     def _get_acc(self, dataset):
         """Get Accuracy
@@ -120,8 +77,6 @@ class GetAcc:
                     (len(dataset[0:4000])+len(dataset[4000:8000])))
 
     def _get_dist(self):
-
-        # self._load_dist()
 
         return np.array([np.sqrt(x ** 2 + y ** 2)
                          for x, y in zip(self.param_x, self.param_y)])
@@ -172,8 +127,7 @@ class GetAcc:
         """
 
         res = (np.array([self._get_acc(dataset) for dataset in
-               self.datasets]).reshape(self.sigma_values.size,
-               self.noise_reals.size))
+               self.datasets]).reshape(self._out_shape))
 
         self.mean_acc = np.mean(res, axis=1)
         self.std_acc = np.std(res, axis=1)
@@ -183,7 +137,7 @@ class GetAcc:
 results_path = '../results'
 
 # Set sigma values and load true classification labels
-sigma_values = np.array([5.0, 14.0, 18.0, 26.0, 35.0, 40.0])
+sigma_values = load('{}/{}'.format(results_path, 'sigmas.npy'))
 labels = load('{}/{}'.format(results_path, 'labels.npy'))
 param_x = load('{}/{}'.format(results_path, 'param_x_total.npy'),
                limits=(36000, 40000))
@@ -195,11 +149,9 @@ bh_res = GetAcc(results_path + '/bh_results', sigma_values, labels,
                 param_x, param_y)
 
 # Get classification accuracy results for SExtractor
-se_res = GetAcc(results_path + '/se_results', sigma_values, labels,
+se_res = GetAcc(results_path + '/sep_results', sigma_values, labels,
                 param_x, param_y, prefix='flags_pad')
 
-# Save noise standard deviation values
-np.save(results_path + '/sigmas', sigma_values)
 
 # Save classification accuracy results
 np.save(results_path + '/acc_results', np.array([bh_res.mean_acc,
