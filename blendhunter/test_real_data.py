@@ -11,7 +11,7 @@ from blendhunter import BlendHunter
 """Predict using given pretrained weights.The function returns accuracy.()"""
 def run_bh(path, value):
 
-    w_path = user_home+'/Cosmostat/Codes/BlendHunter/pretrained_weights'
+    w_path = user_home+'/Cosmostat/Codes/BlendHunter/pretrained_weights_pad'
 
     bh = BlendHunter(weights_path=w_path+'/weights{}'.format(value))
     """Only testing on the test images, no training"""
@@ -25,7 +25,7 @@ def run_bh(path, value):
     true = np.load(path + '/BlendHunterData/test/test/labels.npy')
     print("Match Top:", np.sum(pred_top == true) / true.size)
     print("Error Top", np.sum(pred_top != true) / true.size)
-    np.save(path+'/preds_real_data{}.npy'.format(str(i)+str(j)), pred_top)
+    np.save(path+'/preds_real_data{}.npy'.format(value), pred_top)
 
 
     return np.sum(pred_top == true) / true.size
@@ -97,9 +97,9 @@ def sep_results(blends=None,no_blends=None,path=None):
     flags = np.concatenate((flags_b, flags_nb), axis =0)
     #sep_res = np.concatenate((sep_res_b, sep_res_nb), axis =0)
 
-    """Make sure the 'sep_results_pad' folder exists"""
+    """Make sure the 'sep_pad_results' folder exists"""
     #save
-    np.save(path+'/sep_results_pad/flags_real_pad.npy'., flags)
+    np.save(path+'/sep_pad_results/flags_real_pad.npy', flags)
     #np.save(path+'/sep_results_pad/sep_res{}.npy'., sep_res)
     print('Sep Accuracy: {}%'., acc*100))
     n_miss = (len(np.where(flags_b == 16)[0])+len(np.where(flags_nb == 16)[0]))/(len(flags_b)+len(flags_nb))
