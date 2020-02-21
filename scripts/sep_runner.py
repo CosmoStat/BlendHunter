@@ -18,7 +18,11 @@ from statistics import mean
 
 
 class Run_Sep:
-    """
+    """ Run SEP
+
+    This class runs the SEP (SExtractor) package and assigns a flag to identify
+    objects as blended or not.
+
     """
 
     def __init__(self):
@@ -264,7 +268,7 @@ class Run_Sep:
                 if obj['blended']:
                     obj_pos += [[obj_pos[0][0] + obj['blend_param']['dx'][i],
                                  obj_pos[0][1] + obj['blend_param']['dy'][i]]
-                                for i in range(true_nobj-1)]
+                                for i in range(true_nobj - 1)]
                 dists_tmp = self.get_dist(res, obj_pos)
                 flag = self.check_blend(res)
                 if (flag[0]) and self._check_dist(dists_tmp):
@@ -274,7 +278,7 @@ class Run_Sep:
             elif len(res) == true_nobj:
                 obj_pos += [[obj_pos[0][0] + obj['blend_param']['dx'][i],
                              obj_pos[0][1] + obj['blend_param']['dy'][i]]
-                            for i in range(true_nobj-1)]
+                            for i in range(true_nobj - 1)]
                 dists_tmp = self.get_dist(res, obj_pos)
                 flag = self.check_blend(res)
                 if self._check_dist(dists_tmp):
@@ -283,7 +287,7 @@ class Run_Sep:
                     if np.sum([1 if flag[i] and
                                self._check_dist([dists_tmp[i]]) else 0
                                for i in range(true_nobj)], dtype=bool):
-                        blend = self.BLEND
+                        blend_tmp = self.BLEND
                     else:
                         blend_tmp = self.NO_BLEND
             else:
@@ -301,7 +305,7 @@ class Run_Sep:
                 elif n_good_dist > true_nobj:
                     blend_tmp = self.MISS_EXTRACTION
                 elif np.sum([1 if flag[i] and self._check_dist([dists_tmp[i]])
-                             else 0 for i in range(true_nobj)], dtype=bool):
+                            else 0 for i in range(true_nobj)], dtype=bool):
                     blend_tmp = self.BLEND
                 else:
                     blend_tmp = self.NO_BLEND
