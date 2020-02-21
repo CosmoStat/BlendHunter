@@ -55,7 +55,7 @@ paths_pad = [path_bh+'/bh_pad'+str(i)  for i in [3,5,7,10,12,14,16,18,20,22,24,2
 for i in [5,14,18,26,35,40]:
     for j in ['', 1,2,3,4]:
         """Retrieve results for each set of weights"""
-        results_weights = get_results(paths_list=paths, n_path=[3,5,7,10,12,14,16,18,20,22,24,26,28,30,32,35,37,40,42,44], sigma_value=i)
+        results_weights = get_results(paths_list=paths_pad, n_path=[3,5,7,10,12,14,16,18,20,22,24,26,28,30,32,35,37,40,42,44], sigma_value=str(i)+str(j))
 
-        """Save dictionary. CHeck the folders hierarchy"""
+        """Save dictionary. Check the folders hierarchy"""
         np.save(user_home+'/Cosmostat/Codes/BlendHunter/bh_pad_results/acc_weights{}.npy'.format(str(i)+str(j)), results_weights)
