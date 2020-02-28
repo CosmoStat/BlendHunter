@@ -30,15 +30,24 @@ class CallSepRunner:
 
     """
 
-    def __init__(self, path, sigma_values, n_noise_reals=5, prefix='bh_pad',
-                 output_str='sep_preds'):
+    def __init__(self, path, sigma_values, n_noise_reals=5, prefix='bh_data',
+                 sep_data_dir='sepData', output_str='sep_preds'):
 
         self.path = path
         self.sigma_values = sigma_values
-        self.noise_reals = [''] + list(range(1, n_noise_reals))
+        self.noise_reals = list(range(1, n_noise_reals + 1))
         self.prefix = prefix
+        self.sep_data_dir = sep_data_dir
         self.output_str = output_str
         self._call_sep_run()
+
+    def _get_input_dir(self, sigma, noise_real):
+
+        input_dir = '{}/{}_{}_{}/{}'.format(self.path, self.prefix,
+                                            int(sigma), noise_real,
+                                            self.sep_data_dir)
+
+        return input_dir
 
     def _load_data(self, sigma, noise_real):
         """Load Data
@@ -50,8 +59,9 @@ class CallSepRunner:
 
         """
 
-        return DataHandler('{}/{}{}{}'.format(self.path, self.prefix,
-                           sigma, noise_real)).datasets
+        input_dir = self._get_input_dir(sigma, noise_real)
+
+        return DataHandler(input_dir).datasets
 
     def _run_sep(self, blended, not_blended):
         """Run SEP
@@ -116,7 +126,7 @@ class CallSepRunner:
 
 # to be removed
 user_home = expanduser("~")
-path = user_home + '/Desktop/alice/results'
+path = user_home + '/Desktop/bh_data'
 
 # Set output path
 results_path = '../results'

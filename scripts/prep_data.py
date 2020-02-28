@@ -48,7 +48,7 @@ class PrepData:
         blended = load(self.in_path + '/blended/gal_obj_0.npy')
         not_blended = load(self.in_path + '/not_blended/gal_obj_0.npy')
 
-        return blended, not_blended
+        return np.array([blended, not_blended])
 
     @staticmethod
     def _check_dir(dir):
@@ -76,9 +76,19 @@ class PrepData:
 
     def _get_pad_sample(self, samples, sigma):
 
-        return np.array([[self._pad_noise(image['galsim_image'][0].array,
-                          sigma) for image in sample]
-                         for sample in samples])
+        padded_images = []
+
+        for sample in samples:
+            for image in sample:
+                im_pad = self._pad_noise(image['galsim_image'][0].array, sigma)
+                image['galsim_image_noisy'] = im_pad
+                padded_images.append(im_pad)
+
+        return np.array(padded_images).reshape(samples.shape + im_pad.shape)
+
+        # return np.array([[self._pad_noise(image['galsim_image'][0].array,
+        #                   sigma) for image in sample]
+        #                  for sample in samples])
 
     def _prep_train_data(self, data, output_dir):
 
