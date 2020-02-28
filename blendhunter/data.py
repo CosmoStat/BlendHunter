@@ -360,10 +360,11 @@ class CreateTrainData(object):
                 test_set = np.vstack(test_set)
             self._write_images(test_set, self._test_path)
 
-    def prep_axel(self):
+    def prep_axel(self, randomise=False):
 
-        self.images[0] = np.random.permutation(self.images[0])
-        self.images[1] = np.random.permutation(self.images[1])
+        if randomise:
+            self.images[0] = np.random.permutation(self.images[0])
+            self.images[1] = np.random.permutation(self.images[1])
 
         split1 = self._split_array(self.images[0], self.train_fractions)
         split2 = self._split_array(self.images[1], self.train_fractions)
