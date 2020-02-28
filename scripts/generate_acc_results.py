@@ -37,7 +37,7 @@ class GetAcc(DataHandler):
     """
 
     def __init__(self, path, sigma_values, labels, param_x, param_y,
-                 prefix='preds', n_noise_reals=5):
+                 prefix='bh_preds', n_noise_reals=5):
 
         self.path = path
         self.labels = labels
@@ -66,7 +66,7 @@ class GetAcc(DataHandler):
 
         """
 
-        if self.prefix == 'preds':
+        if self.prefix == 'bh_preds':
 
             return np.sum(dataset == self.labels) / self.labels.size
 
@@ -99,7 +99,7 @@ class GetAcc(DataHandler):
 
         distance = self._get_dist()
 
-        if self.prefix == 'preds':
+        if self.prefix == 'bh_preds':
             label = 'blended'
         else:
             label = 1
@@ -150,7 +150,7 @@ bh_res = GetAcc(results_path + '/bh_results', sigma_values, labels,
 
 # Get classification accuracy results for SExtractor
 se_res = GetAcc(results_path + '/sep_results', sigma_values, labels,
-                param_x, param_y, prefix='flags_pad')
+                param_x, param_y, prefix='sep_preds')
 
 
 # Save classification accuracy results

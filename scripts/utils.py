@@ -57,8 +57,17 @@ class DataHandler:
         self.path = path
         self._load_datasets()
 
+    @staticmethod
+    def _sort_key(file_name):
+
+        split_1 = file_name.split('_')
+        split_2 = split_1[-1].split('.')
+
+        return int(split_1[2]), int(split_2[0])
+
     def _load_datasets(self):
 
         self.datasets = np.array([load('{}/{}'.format(self.path, file))
-                                  for file in os.listdir(self.path)
+                                  for file in sorted(os.listdir(self.path),
+                                  key=self._sort_key)
                                   if file.endswith('.npy')])
