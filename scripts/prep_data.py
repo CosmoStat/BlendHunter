@@ -86,10 +86,6 @@ class PrepData:
 
         return np.array(padded_images).reshape(samples.shape + im_pad.shape)
 
-        # return np.array([[self._pad_noise(image['galsim_image'][0].array,
-        #                   sigma) for image in sample]
-        #                  for sample in samples])
-
     def _prep_train_data(self, data, output_dir):
 
         if not self._check_dir('{}/{}'.format(output_dir, self.bh_data_dir)):
@@ -122,13 +118,18 @@ class PrepData:
 
 
 # Set paths
-input_path = ('/Users/Shared/axel_sims/larger_dataset')
-output_path = user_home + '/Desktop/bh_data'
+input_path_sim = ('/Users/Shared/axel_sims/larger_dataset')
+output_path_sim = user_home + '/Desktop/bh_data'
+input_path_cosmos = ('/Users/Shared/axel_sims/deblending_real')
+output_path_cosmos = user_home + '/Desktop/cosmos_data'
 
 # Set sigma values
 results_path = '../results'
 sigma_values = np.array([5.0, 14.0, 18.0, 26.0, 35.0, 40.0])
 np.save('{}/sigmas.npy'.format(results_path), sigma_values)
 
-# Prepare the dataset
-PrepData(input_path, output_path, sigma_values)
+# Prepare the simulated dataset
+PrepData(input_path_sim, output_path_sim, sigma_values)
+
+# Prepare the COSMOS dataset
+PrepData(input_path_cosmos, output_path_cosmos, sigma_values, n_noise_reals=1)

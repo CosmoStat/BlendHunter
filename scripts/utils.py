@@ -52,9 +52,10 @@ class DataHandler:
 
     """
 
-    def __init__(self, path):
+    def __init__(self, path, sort=True):
 
         self.path = path
+        self.sort = sort
         self._load_datasets()
 
     @staticmethod
@@ -67,7 +68,11 @@ class DataHandler:
 
     def _load_datasets(self):
 
+        if self.sort:
+            key = self._sort_key
+        else:
+            key = None
+
         self.datasets = np.array([load('{}/{}'.format(self.path, file))
                                   for file in sorted(os.listdir(self.path),
-                                  key=self._sort_key)
-                                  if file.endswith('.npy')])
+                                  key=key) if file.endswith('.npy')])

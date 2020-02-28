@@ -36,7 +36,7 @@ class GetAcc(DataHandler):
 
     """
 
-    def __init__(self, path, sigma_values, labels, param_x, param_y,
+    def __init__(self, path, sigma_values, labels, xy_param=None,
                  prefix='bh_preds', n_noise_reals=5):
 
         self.path = path
@@ -47,7 +47,8 @@ class GetAcc(DataHandler):
         self._out_shape = (sigma_values.size, n_noise_reals)
         super().__init__(path)
         self._get_stats()
-        self._get_acc_wrt_dist()
+        if xy_param is not None:
+            self._get_acc_wrt_dist()
 
     def _get_acc(self, dataset):
         """Get Accuracy
@@ -116,7 +117,8 @@ class GetAcc(DataHandler):
                                bin_edges)) for data in res])
 
         self.dist_values = bin_centres
-        self.mean_acc_dist = np.mean(acc_ratios.reshape(6, 5, 60), axis=1)
+        self.mean_acc_dist = np.mean(acc_ratios.reshape(self._out_shape[0],
+                                     self._out_shape[1], 60), axis=1)
 
     def _get_stats(self):
         """Get Statistics
@@ -133,33 +135,48 @@ class GetAcc(DataHandler):
         self.std_acc = np.std(res, axis=1)
 
 
-# Set output path
+# Set paths
 results_path = '../results'
+sim_res = results_path + '/sim_results'
+cosmos_res = results_path + '/cosmos_results'
 
 # Set sigma values and load true classification labels
 sigma_values = load('{}/{}'.format(results_path, 'sigmas.npy'))
-labels = load('{}/{}'.format(results_path, 'labels.npy'))
-param_x = load('{}/{}'.format(results_path, 'param_x_total.npy'),
+labels = load('{}/{}'.format(sim_res, 'labels.npy'))
+labels_cos = load('{}/{}'.format(cosmos_res, 'labels.npy'))
+param_x = load('{}/{}'.format(sim_res, 'param_x_total.npy'),
                limits=(36000, 40000))
-param_y = load('{}/{}'.format(results_path, 'param_y_total.npy'),
+param_y = load('{}/{}'.format(sim_res, 'param_y_total.npy'),
                limits=(36000, 40000))
 
-# Get classification accuracy results for BlendHunter
-bh_res = GetAcc(results_path + '/bh_results', sigma_values, labels,
-                param_x, param_y)
+# Get sim classification accuracy results for BlendHunter
+bh_res = GetAcc(sim_res + '/bh_results', sigma_values, labels,
+                xy_param=(param_x, param_y))
 
-# Get classification accuracy results for SExtractor
-se_res = GetAcc(results_path + '/sep_results', sigma_values, labels,
-                param_x, param_y, prefix='sep_preds')
+# Get sim classification accuracy results for SExtractor
+se_res = GetAcc(sim_res + '/sep_results', sigma_values, labels,
+                xy_param=(param_x, param_y), prefix='sep_preds')
+
+# Get cosmos classification accuracy results for BlendHunter
+bhc_res = GetAcc(cosmos_res + '/bh_results', sigma_values, labels,
+                 n_noise_reals=1)
+
+# Get cosmos classification accuracy results for SExtractor
+sec_res = GetAcc(cosmos_res + '/sep_results', sigma_values, labels,
+                 prefix='sep_preds', n_noise_reals=1)
 
 
-# Save classification accuracy results
-np.save(results_path + '/acc_results', np.array([bh_res.mean_acc,
-                                                 se_res.mean_acc,
-                                                 bh_res.std_acc,
-                                                 se_res.std_acc]))
+# Save sim classification accuracy results
+np.save(sim_res + '/acc_results', np.array([bh_res.mean_acc, se_res.mean_acc,
+                                            bh_res.std_acc, se_res.std_acc]))
 
-# Save classification accuracy w.r.t. distance results
-np.save(results_path + '/dist_results', np.array([bh_res.dist_values,
-                                                  bh_res.mean_acc_dist,
-                                                  se_res.mean_acc_dist]))
+# Save sim classification accuracy w.r.t. distance results
+np.save(sim_res + '/dist_results', np.array([bh_res.dist_values,
+                                             bh_res.mean_acc_dist,
+                                             se_res.mean_acc_dist]))
+
+# Save sim classification accuracy results
+np.save(cosmos_res + '/acc_results', np.array([bhc_res.mean_acc,
+                                               sec_res.mean_acc,
+                                               bhc_res.std_acc,
+                                               sec_res.std_acc]))

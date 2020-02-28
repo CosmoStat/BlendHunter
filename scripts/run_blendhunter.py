@@ -26,7 +26,8 @@ class BHRunner:
 
     def __init__(self, in_path, out_path, sigma_values, n_noise_reals=5,
                  data_dir='bh_data', weights_dir='bh_weights',
-                 weights_str='weights', preds_str='bh_preds', train=True):
+                 weights_str='weights', preds_path='sim_results',
+                 preds_str='bh_preds', train=True):
 
         self.in_path = in_path
         self.out_path = out_path
@@ -35,8 +36,9 @@ class BHRunner:
         self.data_dir = data_dir
         self.weights_dir = weights_dir
         self.weights_str = weights_str
+        self.preds_path = preds_path
         self.preds_str = preds_str
-        self.train = True
+        self.train = train
         self._call_bh()
 
     def _get_in_path(self, sigma, noise_real):
@@ -66,7 +68,7 @@ class BHRunner:
 
     def _save_preds(self, preds, sigma, noise_real):
 
-        path = '../results/bh_results'
+        path = '{}/{}/bh_results'.format(self.out_path, self.preds_path)
         np.save('{}/{}_{}_{}'.format(path, self.preds_str, sigma, noise_real),
                 preds)
 
@@ -101,11 +103,16 @@ sys.path.extend([bh_path])
 from blendhunter import BlendHunter
 
 # Set paths
-input_path = user_home + '/Desktop/bh_data'
 results_path = '../results'
+input_path_sim = user_home + '/Desktop/bh_data'
+input_path_cosmos = user_home + '/Desktop/cosmos_data'
 
 # Set sigma values
 sigma_values = load('{}/{}'.format(results_path, 'sigmas.npy'))
 
-# Run BlendHunter
-BHRunner(input_path, results_path, sigma_values)
+# Run BlendHunter on simulated data
+BHRunner(input_path_sim, results_path, sigma_values)
+
+# Run BlendHunter on COSMOS data
+BHRunner(input_path_cosmos, results_path, sigma_values, n_noise_reals=1,
+         preds_path='cosmos_results', train=False)

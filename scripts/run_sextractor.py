@@ -30,21 +30,24 @@ class CallSepRunner:
 
     """
 
-    def __init__(self, path, sigma_values, n_noise_reals=5, prefix='bh_data',
-                 sep_data_dir='sepData', output_str='sep_preds'):
+    def __init__(self, in_path, out_path, sigma_values, n_noise_reals=5,
+                 data_dir='bh_data', sep_data_dir='sepData',
+                 preds_path='sim_results', output_str='sep_preds'):
 
-        self.path = path
-        self.sigma_values = sigma_values
+        self.in_path = in_path
+        self.out_path = out_path
+        self.sigma_values = sigma_values.astype(int)
         self.noise_reals = list(range(1, n_noise_reals + 1))
-        self.prefix = prefix
+        self.data_dir = data_dir
+        self.preds_path = preds_path
         self.sep_data_dir = sep_data_dir
         self.output_str = output_str
         self._call_sep_run()
 
     def _get_input_dir(self, sigma, noise_real):
 
-        input_dir = '{}/{}_{}_{}/{}'.format(self.path, self.prefix,
-                                            int(sigma), noise_real,
+        input_dir = '{}/{}_{}_{}/{}'.format(self.in_path, self.data_dir,
+                                            sigma, noise_real,
                                             self.sep_data_dir)
 
         return input_dir
@@ -61,7 +64,7 @@ class CallSepRunner:
 
         input_dir = self._get_input_dir(sigma, noise_real)
 
-        return DataHandler(input_dir).datasets
+        return DataHandler(input_dir, sort=False).datasets
 
     def _run_sep(self, blended, not_blended):
         """Run SEP
@@ -101,14 +104,9 @@ class CallSepRunner:
 
         """
 
-        # to be removed
-        path = '../results/sep_results'
+        path = '{}/{}/sep_results'.format(self.out_path, self.preds_path)
         np.save('{}/{}_{}_{}'.format(path, self.output_str, sigma, noise_real),
                 preds)
-
-        # np.save('{}/{}_{}_{}'.format(self.path, self.output_str, sigma,
-        #         noise_real),
-        #         preds)
 
     def _call_sep_run(self):
         """Call SEP Runner
@@ -120,19 +118,24 @@ class CallSepRunner:
         for sigma in self.sigma_values:
             for noise_real in self.noise_reals:
 
-                preds = self._run_sep(*self._load_data(int(sigma), noise_real))
-                self._save_preds(preds, int(sigma), noise_real)
+                preds = self._run_sep(*self._load_data(sigma, noise_real))
+                self._save_preds(preds, sigma, noise_real)
 
 
 # to be removed
 user_home = expanduser("~")
-path = user_home + '/Desktop/bh_data'
 
-# Set output path
+# Set paths
 results_path = '../results'
+input_path_sim = user_home + '/Desktop/bh_data'
+input_path_cosmos = user_home + '/Desktop/cosmos_data'
 
 # Set sigma values
 sigma_values = load('{}/{}'.format(results_path, 'sigmas.npy'))
 
-# Call the SExtractor runner
-CallSepRunner(path, sigma_values)
+# Call the SExtractor runner on the simulated data
+CallSepRunner(input_path_sim, results_path, sigma_values)
+
+# Call the SExtractor runner on the COSMOS data
+CallSepRunner(input_path_cosmos, results_path, sigma_values, n_noise_reals=1,
+              preds_path='cosmos_results')
