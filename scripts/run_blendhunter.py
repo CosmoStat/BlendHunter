@@ -27,7 +27,7 @@ class BHRunner:
     def __init__(self, in_path, out_path, sigma_values, n_noise_reals=5,
                  data_dir='bh_data', weights_dir='bh_weights',
                  weights_str='weights', preds_path='sim_results',
-                 preds_str='bh_preds', train=True):
+                 preds_str='bh_preds', train=True, real=False):
 
         self.in_path = in_path
         self.out_path = out_path
@@ -39,12 +39,17 @@ class BHRunner:
         self.preds_path = preds_path
         self.preds_str = preds_str
         self.train = train
+        self.real = real
         self._call_bh()
 
     def _get_in_path(self, sigma, noise_real):
 
-        return '{}/{}_{}_{}'.format(self.in_path, self.data_dir,
-                                    sigma, noise_real)
+        if self.real:
+            return '{}/{}'.format(self.in_path, self.data_dir)
+
+        else:
+            return '{}/{}_{}_{}'.format(self.in_path, self.data_dir,
+                                        sigma, noise_real)
 
     def _get_weights_path(self, sigma, noise_real):
 
@@ -115,4 +120,4 @@ BHRunner(input_path_sim, results_path, sigma_values)
 
 # Run BlendHunter on COSMOS data
 BHRunner(input_path_cosmos, results_path, sigma_values, n_noise_reals=1,
-         preds_path='cosmos_results', train=False)
+         preds_path='cosmos_results', train=False, real=True)

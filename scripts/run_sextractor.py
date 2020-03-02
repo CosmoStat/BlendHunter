@@ -32,7 +32,7 @@ class CallSepRunner:
 
     def __init__(self, in_path, out_path, sigma_values, n_noise_reals=5,
                  data_dir='bh_data', sep_data_dir='sepData',
-                 preds_path='sim_results', output_str='sep_preds'):
+                 preds_path='sim_results', output_str='sep_preds', real=False):
 
         self.in_path = in_path
         self.out_path = out_path
@@ -42,17 +42,27 @@ class CallSepRunner:
         self.preds_path = preds_path
         self.sep_data_dir = sep_data_dir
         self.output_str = output_str
-        self._call_sep_run()
+        self.real = real
 
-    def _get_input_dir(self, sigma, noise_real):
+        if self.real:
+            self._call_sep_run_real()
+        else:
+            self._call_sep_run()
 
-        input_dir = '{}/{}_{}_{}/{}'.format(self.in_path, self.data_dir,
-                                            sigma, noise_real,
-                                            self.sep_data_dir)
+    def _get_input_dir(self, sigma=None, noise_real=None):
+
+        if self.real:
+            input_dir = '{}/{}/{}'.format(self.in_path, self.data_dir,
+                                          self.sep_data_dir)
+
+        else:
+            input_dir = '{}/{}_{}_{}/{}'.format(self.in_path, self.data_dir,
+                                                sigma, noise_real,
+                                                self.sep_data_dir)
 
         return input_dir
 
-    def _load_data(self, sigma, noise_real):
+    def _load_data(self, sigma=None, noise_real=None):
         """Load Data
 
         This method loads the datasets in the provided input path.
@@ -92,7 +102,7 @@ class CallSepRunner:
 
         return np.concatenate((preds_b, preds_nb), axis=0)
 
-    def _save_preds(self, preds, sigma, noise_real):
+    def _save_preds(self, preds, sigma=None, noise_real=None):
         """Save Predictions
 
         Save the predictions to a numpy binary file.
@@ -105,8 +115,13 @@ class CallSepRunner:
         """
 
         path = '{}/{}/sep_results'.format(self.out_path, self.preds_path)
-        np.save('{}/{}_{}_{}'.format(path, self.output_str, sigma, noise_real),
-                preds)
+
+        if self.real:
+            np.save('{}/{}'.format(path, self.output_str), preds)
+
+        else:
+            np.save('{}/{}_{}_{}'.format(path, self.output_str, sigma,
+                    noise_real), preds)
 
     def _call_sep_run(self):
         """Call SEP Runner
@@ -121,6 +136,11 @@ class CallSepRunner:
                 preds = self._run_sep(*self._load_data(sigma, noise_real))
                 self._save_preds(preds, sigma, noise_real)
 
+    def _call_sep_run_real(self):
+
+        preds = self._run_sep(*self._load_data())
+        self._save_preds(preds, sigma, noise_real)
+
 
 # to be removed
 user_home = expanduser("~")
@@ -134,8 +154,8 @@ input_path_cosmos = user_home + '/Desktop/cosmos_data'
 sigma_values = load('{}/{}'.format(results_path, 'sigmas.npy'))
 
 # Call the SExtractor runner on the simulated data
-CallSepRunner(input_path_sim, results_path, sigma_values)
+# CallSepRunner(input_path_sim, results_path, sigma_values)
 
 # Call the SExtractor runner on the COSMOS data
 CallSepRunner(input_path_cosmos, results_path, sigma_values, n_noise_reals=1,
-              preds_path='cosmos_results')
+              preds_path='cosmos_results', real=True)
