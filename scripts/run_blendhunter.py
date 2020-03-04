@@ -40,6 +40,9 @@ class BHRunner:
         self.preds_str = preds_str
         self.train = train
         self.real = real
+
+        print('Running BlendHunter on data in {}.'.format(in_path))
+
         self._call_bh()
 
     def _get_in_path(self, sigma, noise_real):
@@ -73,9 +76,12 @@ class BHRunner:
 
     def _save_preds(self, preds, sigma, noise_real):
 
-        path = '{}/{}/bh_results'.format(self.out_path, self.preds_path)
-        np.save('{}/{}_{}_{}'.format(path, self.preds_str, sigma, noise_real),
-                preds)
+        output_path = ('{}/{}/bh_results/{}_{}_{}'.format(self.out_path,
+                       self.preds_path, self.preds_str, sigma, noise_real))
+
+        np.save(output_path, preds)
+
+        print(' - Predictions saved to {}'.format(output_path))
 
     def _call_bh(self):
 
@@ -100,6 +106,8 @@ class BHRunner:
                     warn('{} not found in {}.'.format(input_path,
                          self.in_path))
 
+                del bh
+
 
 # to be removed
 user_home = expanduser("~")
@@ -116,7 +124,7 @@ input_path_cosmos = user_home + '/Desktop/cosmos_data'
 sigma_values = load('{}/{}'.format(results_path, 'sigmas.npy'))
 
 # Run BlendHunter on simulated data
-BHRunner(input_path_sim, results_path, sigma_values)
+# BHRunner(input_path_sim, results_path, sigma_values)
 
 # Run BlendHunter on COSMOS data
 BHRunner(input_path_cosmos, results_path, sigma_values, n_noise_reals=1,

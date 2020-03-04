@@ -29,23 +29,24 @@ class GetAcc(DataHandler):
         Noise standard deviation values
     labels : numpy.ndarray
         True classification labels
-    prefix : str
-        Input file prefix string
     n_noise_reals : int
         Number of noise realisations
 
     """
 
-    def __init__(self, path, sigma_values, labels, xy_param=None,
-                 prefix='bh_preds', n_noise_reals=5):
+    def __init__(self, path, labels, sigma_values=None, xy_param=None,
+                 n_noise_reals=5, sort=True):
 
         self.path = path
         self.labels = labels
         self.param_x = param_x
         self.param_y = param_y
-        self.prefix = prefix
-        self._out_shape = (sigma_values.size, n_noise_reals)
-        super().__init__(path)
+        if sigma_values is None:
+            self._out_shape = (1, n_noise_reals)
+        else:
+            self._out_shape = (sigma_values.size, n_noise_reals)
+        super().__init__(path, sort)
+
         self._get_stats()
         if xy_param is not None:
             self._get_acc_wrt_dist()
@@ -67,15 +68,7 @@ class GetAcc(DataHandler):
 
         """
 
-        if self.prefix == 'bh_preds':
-
-            return np.sum(dataset == self.labels) / self.labels.size
-
-        else:
-
-            return ((len(np.where(dataset[0:4000] == 1)[0]) +
-                    len(np.where(dataset[4000:8000] == 0)[0])) /
-                    (len(dataset[0:4000])+len(dataset[4000:8000])))
+        return np.sum(dataset == self.labels) / self.labels.size
 
     def _get_dist(self):
 
@@ -84,7 +77,7 @@ class GetAcc(DataHandler):
 
     def _get_errors(self, dataset, label='blended'):
 
-        return np.where(dataset[0:4000] != label)[0]
+        return np.where(dataset[:dataset.size // 2] != label)[0]
 
     def _get_dist_hist(self, dist, bins=60, return_bins=False):
 
@@ -100,12 +93,7 @@ class GetAcc(DataHandler):
 
         distance = self._get_dist()
 
-        if self.prefix == 'bh_preds':
-            label = 'blended'
-        else:
-            label = 1
-
-        res = [distance[self._get_errors(dataset, label=label)]
+        res = [distance[self._get_errors(dataset, label='blended')]
                for dataset in self.datasets]
 
         n_total, bin_centres, bin_edges = (self._get_dist_hist(distance,
@@ -131,6 +119,7 @@ class GetAcc(DataHandler):
         res = (np.array([self._get_acc(dataset) for dataset in
                self.datasets]).reshape(self._out_shape))
 
+        self.acc = res
         self.mean_acc = np.mean(res, axis=1)
         self.std_acc = np.std(res, axis=1)
 
@@ -150,20 +139,22 @@ param_y = load('{}/{}'.format(sim_res, 'param_y_total.npy'),
                limits=(36000, 40000))
 
 # Get sim classification accuracy results for BlendHunter
-bh_res = GetAcc(sim_res + '/bh_results', sigma_values, labels,
-                xy_param=(param_x, param_y))
+bh_res = GetAcc(sim_res + '/bh_results', labels,
+                sigma_values=sigma_values, xy_param=(param_x, param_y))
 
 # Get sim classification accuracy results for SExtractor
-se_res = GetAcc(sim_res + '/sep_results', sigma_values, labels,
-                xy_param=(param_x, param_y), prefix='sep_preds')
+se_res = GetAcc(sim_res + '/sep_results', labels,
+                sigma_values=sigma_values, xy_param=(param_x, param_y))
 
 # Get cosmos classification accuracy results for BlendHunter
-bhc_res = GetAcc(cosmos_res + '/bh_results', sigma_values, labels,
-                 n_noise_reals=1)
+bhc_res = GetAcc(cosmos_res + '/bh_results', labels_cos,
+                 sigma_values=sigma_values, n_noise_reals=1)
 
 # Get cosmos classification accuracy results for SExtractor
-sec_res = GetAcc(cosmos_res + '/sep_results', sigma_values, labels,
-                 prefix='sep_preds', n_noise_reals=1)
+sec_res = GetAcc(cosmos_res + '/sep_results', labels_cos, n_noise_reals=1,
+                 sort=False)
+
+print('Saveing results to {}'.format(sim_res))
 
 
 # Save sim classification accuracy results
@@ -176,7 +167,6 @@ np.save(sim_res + '/dist_results', np.array([bh_res.dist_values,
                                              se_res.mean_acc_dist]))
 
 # Save sim classification accuracy results
-np.save(cosmos_res + '/acc_results', np.array([bhc_res.mean_acc,
-                                               sec_res.mean_acc,
-                                               bhc_res.std_acc,
-                                               sec_res.std_acc]))
+np.save(cosmos_res + '/acc_results', np.array([bhc_res.acc, sec_res.acc]))
+
+print('Saveing results to {}'.format(cosmos_res))

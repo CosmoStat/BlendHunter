@@ -15,6 +15,9 @@ import numpy as np
 from utils import load, DataHandler
 from sep_runner import Run_Sep
 from os.path import expanduser
+import warnings
+from astropy.utils.exceptions import AstropyWarning
+warnings.simplefilter('ignore', category=AstropyWarning)
 
 
 class CallSepRunner:
@@ -43,6 +46,8 @@ class CallSepRunner:
         self.sep_data_dir = sep_data_dir
         self.output_str = output_str
         self.real = real
+
+        print('Running SExtractor on data in {}.'.format(in_path))
 
         if self.real:
             self._call_sep_run_real()
@@ -97,10 +102,12 @@ class CallSepRunner:
 
         runner = Run_Sep()
 
+        pred_map = np.vectorize({0: 'not_blended', 1: 'blended'}.get)
+
         preds_b, _ = runner.process(blended)
         preds_nb, _ = runner.process(not_blended)
 
-        return np.concatenate((preds_b, preds_nb), axis=0)
+        return pred_map(np.concatenate((preds_b, preds_nb), axis=0))
 
     def _save_preds(self, preds, sigma=None, noise_real=None):
         """Save Predictions
@@ -117,11 +124,15 @@ class CallSepRunner:
         path = '{}/{}/sep_results'.format(self.out_path, self.preds_path)
 
         if self.real:
-            np.save('{}/{}'.format(path, self.output_str), preds)
+            output_path = '{}/{}'.format(path, self.output_str)
+            np.save(output_path, preds)
 
         else:
-            np.save('{}/{}_{}_{}'.format(path, self.output_str, sigma,
-                    noise_real), preds)
+            output_path = '{}/{}_{}_{}'.format(path, self.output_str, sigma,
+                                               noise_real)
+            np.save(output_path, preds)
+
+        print(' - Predictions saved to {}'.format(output_path))
 
     def _call_sep_run(self):
         """Call SEP Runner
@@ -139,7 +150,7 @@ class CallSepRunner:
     def _call_sep_run_real(self):
 
         preds = self._run_sep(*self._load_data())
-        self._save_preds(preds, sigma, noise_real)
+        self._save_preds(preds)
 
 
 # to be removed
@@ -154,7 +165,7 @@ input_path_cosmos = user_home + '/Desktop/cosmos_data'
 sigma_values = load('{}/{}'.format(results_path, 'sigmas.npy'))
 
 # Call the SExtractor runner on the simulated data
-# CallSepRunner(input_path_sim, results_path, sigma_values)
+CallSepRunner(input_path_sim, results_path, sigma_values)
 
 # Call the SExtractor runner on the COSMOS data
 CallSepRunner(input_path_cosmos, results_path, sigma_values, n_noise_reals=1,
