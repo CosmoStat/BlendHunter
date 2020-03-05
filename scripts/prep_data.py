@@ -151,8 +151,7 @@ class PrepData:
 
         if self._create_dir(output_dir):
             samples = self._load_mocks()
-            samples_pad = self._get_pad_sample(samples, use_sigma_mad=True,
-                                               pad_sep=False)
+            samples_pad = self._get_pad_sample(samples)
             self._prep_train_data(samples_pad, output_dir, divide=False)
             self._prep_sep_data(samples, output_dir, use_slice=False)
 
