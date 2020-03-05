@@ -120,7 +120,7 @@ from blendhunter import BlendHunter
 results_path = '../results'
 input_path_sim = user_home + '/Desktop/blending/sim_data'
 input_path_cosmos = user_home + '/Desktop/blending/cosmos_data'
-weights_path = user_home + '/Desktop/blending/bh_weights'
+weights_path = user_home + '/Desktop/blending'
 
 # Set sigma values
 sigma_values = load('{}/{}'.format(results_path, 'sigmas.npy'))
