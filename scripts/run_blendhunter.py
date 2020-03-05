@@ -24,12 +24,13 @@ plaidml.keras.install_backend()
 
 class BHRunner:
 
-    def __init__(self, in_path, out_path, sigma_values, n_noise_reals=5,
-                 data_dir='bh_data', weights_dir='bh_weights',
+    def __init__(self, in_path, weights_path, out_path, sigma_values,
+                 n_noise_reals=5, data_dir='bh_data', weights_dir='bh_weights',
                  weights_str='weights', preds_path='sim_results',
                  preds_str='bh_preds', train=True, real=False):
 
         self.in_path = in_path
+        self.weights_path = weights_path
         self.out_path = out_path
         self.sigma_values = sigma_values.astype(int)
         self.noise_reals = list(range(1, n_noise_reals + 1))
@@ -56,7 +57,7 @@ class BHRunner:
 
     def _get_weights_path(self, sigma, noise_real):
 
-        weights_path = ('{}/{}/{}_{}_{}'.format(self.out_path,
+        weights_path = ('{}/{}/{}_{}_{}'.format(self.weights_path,
                         self.weights_dir, self.weights_str, sigma, noise_real))
 
         if not os.path.isdir(weights_path):
@@ -111,21 +112,22 @@ class BHRunner:
 
 # to be removed
 user_home = expanduser("~")
-bh_path = user_home + '/Desktop/alice/BlendHunter'
+bh_path = user_home + '/Desktop/blending/alice/BlendHunter'
 sys.path.extend([bh_path])
 from blendhunter import BlendHunter
 
 # Set paths
 results_path = '../results'
-input_path_sim = user_home + '/Desktop/bh_data'
-input_path_cosmos = user_home + '/Desktop/cosmos_data'
+input_path_sim = user_home + '/Desktop/blending/sim_data'
+input_path_cosmos = user_home + '/Desktop/blending/cosmos_data'
+weights_path = user_home + '/Desktop/blending/bh_weights'
 
 # Set sigma values
 sigma_values = load('{}/{}'.format(results_path, 'sigmas.npy'))
 
 # Run BlendHunter on simulated data
-# BHRunner(input_path_sim, results_path, sigma_values)
+BHRunner(input_path_sim, weights_path, results_path, sigma_values)
 
 # Run BlendHunter on COSMOS data
-BHRunner(input_path_cosmos, results_path, sigma_values, n_noise_reals=1,
-         preds_path='cosmos_results', train=False, real=True)
+BHRunner(input_path_cosmos, weights_path, results_path, sigma_values,
+         n_noise_reals=1, preds_path='cosmos_results', train=False, real=True)

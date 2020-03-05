@@ -158,8 +158,8 @@ user_home = expanduser("~")
 
 # Set paths
 results_path = '../results'
-input_path_sim = user_home + '/Desktop/bh_data'
-input_path_cosmos = user_home + '/Desktop/cosmos_data'
+input_path_sim = user_home + '/Desktop/blending/sim_data'
+input_path_cosmos = user_home + '/Desktop/blending/cosmos_data'
 
 # Set sigma values
 sigma_values = load('{}/{}'.format(results_path, 'sigmas.npy'))

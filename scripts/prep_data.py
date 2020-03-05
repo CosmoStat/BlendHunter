@@ -16,13 +16,14 @@ import os
 import numpy as np
 from modopt.signal.noise import add_noise
 from modopt.base.np_adjust import pad2d
+from modopt.math.stats import sigma_mad
 from utils import load
 
 # to be removed
 import sys
 from os.path import expanduser
 user_home = expanduser("~")
-bh_path = user_home + '/Desktop/alice/BlendHunter'
+bh_path = user_home + '/Desktop/blending/alice/BlendHunter'
 sys.path.extend([bh_path])
 from blendhunter.data import CreateTrainData
 
@@ -30,22 +31,25 @@ from blendhunter.data import CreateTrainData
 class PrepData:
 
     def __init__(self, in_path, out_path, sigma_values=None, n_noise_reals=5,
-                 padding=(7, 7), output_str='bh_data',
+                 pad=False, padding=(7, 7), output_str='bh_data',
                  bh_data_dir='BlendHunterData', sep_data_dir='sepData'):
 
         self.in_path = in_path
         self.out_path = out_path
         self.sigma_values = sigma_values
         self.noise_reals = list(range(1, n_noise_reals + 1))
+        self.pad = pad
         self.padding = padding
         self.output_str = output_str
         self.bh_data_dir = bh_data_dir
         self.sep_data_dir = sep_data_dir
 
+        print('Preparing data in {}'.format(out_path))
+
         if sigma_values is None:
             self._prep_real_data()
         else:
-            self._prep_data()
+            self._prep_sim_data()
 
     def _load_mocks(self):
 
@@ -86,16 +90,20 @@ class PrepData:
 
         for sample in samples:
             for image in sample:
-                if sigma is None:
-                    im_pad = pad2d(image['galsim_image'][0].array,
-                                   self.padding)
-                else:
-                    im_pad = self._pad_noise(image['galsim_image'][0].array,
-                                             sigma)
-                image['galsim_image_noisy'] = im_pad
-                padded_images.append(im_pad)
 
-        return np.array(padded_images).reshape(samples.shape + im_pad.shape)
+                im_array = image['galsim_image'][0].array
+
+                if self.pad:
+                    im_array = pad2d(im_array, self.padding)
+
+                if sigma is not None:
+                    im_array = add_noise(im_array, sigma=sigma)
+
+                image['galsim_image_noisy'] = im_array
+
+                padded_images.append(im_array)
+
+        return np.array(padded_images).reshape(samples.shape + im_array.shape)
 
     def _prep_train_data(self, data, output_dir, divide=True):
 
@@ -106,13 +114,13 @@ class PrepData:
             ctd = CreateTrainData(data, output_dir, train_fractions)
             ctd.prep_axel(path_to_output=output_dir)
 
-    def _prep_sep_data(self, data, output_dir, slice=True):
+    def _prep_sep_data(self, data, output_dir, use_slice=True):
 
         sep_output_dir = '{}/{}'.format(output_dir, self.sep_data_dir)
 
         self._create_dir(sep_output_dir)
 
-        if slice:
+        if use_slice:
             indices = slice(36000, 40000)
             blends = data[0][indices]
             no_blends = data[1][indices]
@@ -143,16 +151,17 @@ class PrepData:
 
         if self._create_dir(output_dir):
             samples = self._load_mocks()
-            samples_pad = self._get_pad_sample(samples)
+            samples_pad = self._get_pad_sample(samples, use_sigma_mad=True,
+                                               pad_sep=False)
             self._prep_train_data(samples_pad, output_dir, divide=False)
-            self._prep_sep_data(samples, output_dir, slice=False)
+            self._prep_sep_data(samples, output_dir, use_slice=False)
 
 
 # Set paths
 input_path_sim = ('/Users/Shared/axel_sims/larger_dataset')
-output_path_sim = user_home + '/Desktop/bh_data'
+output_path_sim = user_home + '/Desktop/blending/sim_data'
 input_path_cosmos = ('/Users/Shared/axel_sims/deblending_real/sample_10k')
-output_path_cosmos = user_home + '/Desktop/cosmos_data'
+output_path_cosmos = user_home + '/Desktop/blending/cosmos_data'
 
 # Set sigma values
 results_path = '../results'
@@ -160,7 +169,7 @@ sigma_values = np.array([5.0, 14.0, 18.0, 26.0, 35.0, 40.0])
 np.save('{}/sigmas.npy'.format(results_path), sigma_values)
 
 # Prepare the simulated dataset
-# PrepData(input_path_sim, output_path_sim, sigma_values)
+PrepData(input_path_sim, output_path_sim, sigma_values)
 
 # Prepare the COSMOS dataset
 PrepData(input_path_cosmos, output_path_cosmos)
