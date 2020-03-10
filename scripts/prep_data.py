@@ -36,7 +36,7 @@ class PrepData:
 
         self.in_path = in_path
         self.out_path = out_path
-        self.sigma_values = sigma_values
+        self.sigma_values = sigma_values.astype(int)
         self.noise_reals = list(range(1, n_noise_reals + 1))
         self.pad = pad
         self.padding = padding
@@ -47,8 +47,10 @@ class PrepData:
         print('Preparing data in {}'.format(out_path))
 
         if sigma_values is None:
+            print(' - Processing real images')
             self._prep_real_data()
         else:
+            print(' - Processing simulated images')
             self._prep_sim_data()
 
     def _load_mocks(self):
@@ -76,13 +78,9 @@ class PrepData:
     def _get_output_dir(self, sigma, noise_real):
 
         output_dir = '{}/{}_{}_{}'.format(self.out_path, self.output_str,
-                                          int(sigma), noise_real)
+                                          sigma, noise_real)
 
         return output_dir
-
-    def _pad_noise(self, image, sigma):
-
-        return add_noise(pad2d(image, self.padding), sigma=sigma)
 
     def _get_pad_sample(self, samples, sigma=None):
 
@@ -110,7 +108,6 @@ class PrepData:
         train_fractions = (0.45, 0.45, .1) if divide else (0.0, 0.0, 1.0)
 
         if not self._check_dir('{}/{}'.format(output_dir, self.bh_data_dir)):
-
             ctd = CreateTrainData(data, output_dir, train_fractions)
             ctd.prep_axel(path_to_output=output_dir)
 
