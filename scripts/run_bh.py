@@ -1,48 +1,60 @@
 import numpy as np
-import sys
-from os.path import expanduser
-user_home = expanduser("~")
+from blendhunter.config import BHConfig
 
-#Check the folder hierarchy
-bh_path = (user_home+'/Cosmostat/Codes/BlendHunter')
-sys.path.extend([bh_path])
-
-"""Set plaidml backend for Keras before importing blendhunter"""
+# Set plaidml backend for Keras before importing blendhunter
 import plaidml.keras
 plaidml.keras.install_backend()
 
-#Import network
+# Import BlendHunter
 from blendhunter import BlendHunter
 
-"""Loop to train the network on padded noisy images and get predicted labels"""
-for j in [5, 14, 18, 26, 35, 40]:
-    for i in ['', 1,2,3,4]:
-        #Make sure to check the folder hierarchy
-        path = user_home+'/Cosmostat/Codes/BlendHunter/bh_{}'.format(str(j)+str(i))
-        #For non padded images
-        #path = user_home+'/Cosmostat/Codes/BlendHunter/bh_{}'.format(str(j)+str(i))
-        """Make sure each bh folder contains a 'weights' folder"""
-        bh = BlendHunter(weights_path=path + '/weights')
 
-        # Train Network
-        bh.train(path + '/BlendHunterData',
-         get_features=True,
-         train_top=True,
-         fine_tune=False) #No fine tuning
+def run_bh(out_path, noise_sigma, n_noise_real, dir_str='bh_',
+           verbose=True):
 
-        hist = np.array(bh.history.history) #Saving training history is optional
+    for sigma in noise_sigma:
+        for noise_real in range(n_noise_real):
 
-        # Predict Results
-        pred_top = bh.predict(path + '/BlendHunterData/test/test', weights_type='top')
-        #pred_fine = bh.predict(path + '/BlendHunterData/test/test', weights_type='fine')
-        true = np.load(path + '/BlendHunterData/test/test/labels.npy')
-        print("Match Top:", np.sum(pred_top == true) / true.size)
-        #print("Match Fine:", np.sum(pred_fine == true) / true.size)
-        print("Error Top", np.sum(pred_top != true) / true.size)
+            id = f'{str(sigma)}{str(noise_real)}'
+            path = f'{out_path}/{dir_str}{id}'
 
-        #Save history and results
-        #Make sure to check the folder hierarchy
-        np.save(path+'/BlendHunterData/test/test/history.npy', hist)
-        np.save(user_home+'/Cosmostat/Codes/BlendHunter/bh_results/preds{}.npy'.format(str(j)+str(i)), pred_top)
-        #For non padded images
-        #np.save(user_home+'/Cosmostat/Codes/BlendHunter/bh_results/preds_{}.npy'.format(str(j)+str(i)), pred_top)
+            if verbose:
+                print(f'Processing {dir_str}{id}')
+
+            bh = BlendHunter(weights_path=path + '/weights')
+
+            # Train Network (no fine tuning)
+            bh.train(
+             path + '/BlendHunterData',
+             get_features=True,
+             train_top=True,
+             fine_tune=False
+            )
+
+            # Get training history
+            hist = np.array(bh.history.history)
+
+            # Predict Results
+            pred_top = bh.predict(path + '/BlendHunterData/test/test',
+                                  weights_type='top')
+            true = np.load(path + '/BlendHunterData/test/test/labels.npy')
+
+            print("Match Top:", np.sum(pred_top == true) / true.size)
+            print("Error Top", np.sum(pred_top != true) / true.size)
+
+            # Save history and results
+            np.save(path + '/BlendHunterData/test/test/history.npy', hist)
+            np.save(out_path + f'/bh_results/preds{id}.npy', pred_top)
+
+
+# Read BH configuration file
+bhconfig = BHConfig().config
+out_path = bhconfig['out_path']
+noise_sigma = bhconfig['noise_sigma']
+n_noise_real = bhconfig['n_noise_real']
+
+# Prepare non padded images
+# run_bh(out_path, noise_sigma, n_noise_real)
+
+# Prepare padded images
+run_bh(out_path, noise_sigma, n_noise_real, dir_str='bh_pad')
