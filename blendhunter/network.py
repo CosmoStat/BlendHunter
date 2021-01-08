@@ -13,16 +13,15 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from time import time
 from cv2 import imread
-import keras
-from keras.preprocessing.image import ImageDataGenerator
-from keras.models import Sequential, Model
-from keras.layers import Dropout, Flatten, Dense, Input
-from keras.applications import VGG16
-from keras.optimizers import Adam, SGD
-from keras.callbacks import ModelCheckpoint
-from keras.callbacks import EarlyStopping
-from keras.callbacks import ReduceLROnPlateau
-from keras import regularizers
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.models import Sequential, Model
+from tensorflow.keras.layers import Dropout, Flatten, Dense, Input
+from tensorflow.keras.applications import VGG16
+from tensorflow.keras.optimizers import Adam, SGD
+from tensorflow.keras.callbacks import ModelCheckpoint
+from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras.callbacks import ReduceLROnPlateau
+from tensorflow.keras import regularizers
 
 
 class BlendHunter(object):
@@ -261,7 +260,8 @@ class BlendHunter(object):
                     value[feature_name] = self._load_data(key, out_path)
 
     @staticmethod
-    def _build_top_model(input_shape, dense_output=(256, 512, 1024), dropout=0.1):
+    def _build_top_model(input_shape, dense_output=(256, 512, 1024),
+                         dropout=0.1):
         """ Build Top Model
         Build the fully connected layers of the network.
         Parameters
@@ -431,7 +431,6 @@ class BlendHunter(object):
                                          batch_size=self._batch_size_fine,
                                          class_mode='binary')
 
-
         callbacks = []
         callbacks.append(ModelCheckpoint('{}.h5'.format(self._fine_tune_file),
                          monitor='val_loss', verbose=self._verbose,
@@ -444,22 +443,23 @@ class BlendHunter(object):
                                            cooldown=2, verbose=self._verbose))
     #    callbacks.append(LoggingCallback(filetxt=logfile, log=write_log)])
 
-        history_tune1 = model.fit_generator(train_gen, steps_per_epoch=train_gen.steps,
+        history_tune1 = model.fit_generator(
+                            train_gen,
+                            steps_per_epoch=train_gen.steps,
                             epochs=self._epochs_fine,
                             callbacks=callbacks,
                             validation_data=valid_gen,
                             validation_steps=valid_gen.steps,
-                            verbose=self._verbose)
+                            verbose=self._verbose
+                        )
 
         self._freeze_layers(model, 19)
         model.layers[17].trainable = True
         model.layers[18].trainable = True
 
-
         model.compile(loss='binary_crossentropy',
                       optimizer=Adam(lr=1e-6, decay=1e-6),
                       metrics=['binary_accuracy'])
-
 
         model.fit_generator(train_gen, steps_per_epoch=train_gen.steps,
                             epochs=self._epochs_fine,
@@ -468,12 +468,8 @@ class BlendHunter(object):
                             validation_steps=valid_gen.steps,
                             verbose=self._verbose)
 
-
         model.save_weights('{}.h5'.format(self._final_model_file))
         print(history_tune1.history.keys())
-
-
-
 
     def train(self, input_path, get_features=True, train_top=True,
               fine_tune=True, train_dir_name='train',
@@ -597,7 +593,6 @@ class BlendHunter(object):
             res = model.predict_generator(test_gen,
                                           verbose=self._verbose,
                                           steps=test_gen.steps).flatten()
-
 
         elif not isinstance(input_data, type(None)):
 

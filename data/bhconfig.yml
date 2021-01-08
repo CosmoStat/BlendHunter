@@ -1,0 +1,10 @@
+out_path: /Volumes/Grogu/Projects/deblending/BlendHunter
+in_path: /Users/sfarrens/Google Drive/Deblending/data/sims/larger_dataset
+noise_sigma:
+  - 5
+  - 14
+  - 18
+  - 26
+  - 35
+  - 40
+n_noise_real: 5

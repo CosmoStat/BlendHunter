@@ -4,11 +4,16 @@ import modopt
 from modopt.signal.noise import add_noise
 from modopt.base.np_adjust import pad2d
 
-from os.path import expanduser
-user_home = expanduser("~")
+# from os.path import expanduser
+# user_home = expanduser("~")
+
+from blendhunter.path import out_path, sim_path
+
 #Check for the folder hierarchy
-bh_path = (user_home+'/Cosmostat/Codes/BlendHunter')
-sys.path.extend([bh_path])
+# bh_path = (user_home+'/Cosmostat/Codes/BlendHunter')
+# sys.path.extend([bh_path])
+
+
 
 #Import the class to split into train-valid-test
 from blendhunter.data import CreateTrainData
@@ -63,9 +68,12 @@ def get_images(sample, add_noise_img = False, sigma_noise = None, add_padding_no
 
 
 #Paths for datasets with different sigma_noise
-path = user_home+'/Cosmostat/Codes/BlendHunter'
+# path = user_home+'/Cosmostat/Codes/BlendHunter'
+path = out_path
 #Path for simulations
-input = path + '/axel_sims/larger_dataset'
+# input = path + '/axel_sims/larger_dataset'
+input = sim_path
+
 
 """Datasets are called bh_+ the noise level + the number of noise realisation"""
 output_pad = path + '/bh_pad{}'

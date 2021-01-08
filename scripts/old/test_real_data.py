@@ -101,7 +101,7 @@ def sep_results(blends=None,no_blends=None,path=None):
     #save
     np.save(path+'/sep_pad_results/flags_real_pad.npy', flags)
     #np.save(path+'/sep_results_pad/sep_res{}.npy'., sep_res)
-    print('Sep Accuracy: {}%'., acc*100))
+    # print('Sep Accuracy: {}%'., acc*100))
     n_miss = (len(np.where(flags_b == 16)[0])+len(np.where(flags_nb == 16)[0]))/(len(flags_b)+len(flags_nb))
     print('Misidentified : {}%'.format(n_miss*100))
 
