@@ -8,13 +8,9 @@ NO_BLEND = 0
 BLEND = 1
 MISS_EXTRACTION = 16
 
-class Run_Sep:
-    """
-    """
 
-    def __init__(self):
-        """
-        """
+class Run_Sep:
+    """Run SEP"""
 
     @staticmethod
     def get_power_2(x):
@@ -48,7 +44,8 @@ class Run_Sep:
             i <<= 1
         return powers
 
-    def run_sep(self, img, thresh=1.5, deblend_nthresh=32, deblend_cont=0.005, sig_noise=None):
+    def run_sep(self, img, thresh=1.5, deblend_nthresh=32, deblend_cont=0.005,
+                sig_noise=None):
         """ Run sep
 
         Run sep algorithm on a vignet.
@@ -75,10 +72,9 @@ class Run_Sep:
         """
         sigmas = []
 
-        if sig_noise == None:
+        if sig_noise is None:
             bkg = sep.Background(img)
             sig_noise = bkg.globalrms
-
 
         res = sep.extract(img, thresh, err=sig_noise,
                           deblend_nthresh=deblend_nthresh,
@@ -99,14 +95,15 @@ class Run_Sep:
         Returns
         -------
         flags : list
-            List of the flag for each objects. flag = 1 if the object is blended
-            and 0 otherwise.
+            List of the flag for each objects. flag = 1 if the object is
+            blended and 0 otherwise.
 
         """
 
         n_obj = len(res)
 
-        flags = [1 if sep.OBJ_MERGED in self.get_power_2(res[i]['flag']) else 0 for i in range(n_obj)] # , dtype=bool).astype(int)
+        flags = [1 if sep.OBJ_MERGED in self.get_power_2(res[i]['flag'])
+                 else 0 for i in range(n_obj)]
 
         return flags
 
@@ -130,11 +127,12 @@ class Run_Sep:
 
         """
 
-        dist = np.sqrt((obj_res['x'] - obj_true_pos[0])**2. + (obj_res['y'] - obj_true_pos[1])**2.)
+        dist = np.sqrt((obj_res['x'] - obj_true_pos[0]) ** 2. +
+                       (obj_res['y'] - obj_true_pos[1])**2.)
 
         return dist
 
-    def get_dist(self, res, true_pos, thresh = 2):
+    def get_dist(self, res, true_pos, thresh=2):
         """ Get distance
 
         This method return the distance between the real objects and the best
@@ -175,9 +173,9 @@ class Run_Sep:
     def _check_dist(self, dists):
         """ Check distance
 
-        Flag a list of object depending if SExtractor well identify them or not.
-        If at least one object in the list is not well identify will return
-        False.
+        Flag a list of object depending if SExtractor well identify them or
+        not. If at least one object in the list is not well identify will
+        return False.
 
         Parameters
         ----------
@@ -190,7 +188,8 @@ class Run_Sep:
 
         """
 
-        return np.prod([1 if dist < BIG_DISTANCE else 0 for dist in dists], dtype=bool).astype(int)
+        return np.prod([1 if dist < BIG_DISTANCE else 0 for dist in dists],
+                       dtype=bool).astype(int)
 
     def process(self, f, epoch=0):
         """ Process
@@ -219,20 +218,21 @@ class Run_Sep:
         final_flags = []
         dists = []
         all_res = []
-        blend_flag = []           # 0 : no blend, 1 : blend well find, 16 : miss identification
+        blend_flag = []
+        # 0 : no blend, 1 : blend well find, 16 : miss identification
 
         for obj in f:
             # Retrieve image w/out noise
-            #img = obj['galsim_image'][epoch].array
+            # img = obj['galsim_image'][epoch].array
 
             # Retrieve image w/ noise
             img = obj['galsim_image_noisy']
 
             # Retrieve denoised image
-            #img = obj['denoised_img']
+            # img = obj['denoised_img']
 
             true_nobj = 1
-            if obj['blended'] == True:
+            if obj['blended'] is True:
                 true_nobj += len(obj['blend_param']['dx'])
 
             res = self.run_sep(img)
@@ -243,7 +243,7 @@ class Run_Sep:
                 blend_tmp = MISS_EXTRACTION
 
             elif len(res) == 1:
-                if obj['blended'] == True:
+                if obj['blended'] is True:
                     obj_pos += [[obj_pos[0][0] + obj['blend_param']['dx'][i], obj_pos[0][1] + obj['blend_param']['dy'][i]] for i in range(true_nobj-1)]
                 dists_tmp = self.get_dist(res, obj_pos)
                 flag = self.check_blend(res)
@@ -289,7 +289,6 @@ class Run_Sep:
         sig_noise = bkg.globalrms
 
         return sig_noise
-
 
     @staticmethod
     def plot_sex_obj(res, img):
