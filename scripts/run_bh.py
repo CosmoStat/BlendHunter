@@ -12,6 +12,8 @@ from blendhunter import BlendHunter
 def run_bh(out_path, noise_sigma, n_noise_real, dir_str='bh_',
            verbose=True):
 
+    dirpad = '_pad' if 'pad' in dir_str else ''
+
     for sigma in noise_sigma:
         for noise_real in range(n_noise_real):
 
@@ -44,7 +46,7 @@ def run_bh(out_path, noise_sigma, n_noise_real, dir_str='bh_',
 
             # Save history and results
             np.save(path + '/BlendHunterData/test/test/history.npy', hist)
-            np.save(out_path + f'/bh_results/preds{id}.npy', pred_top)
+            np.save(out_path + f'/bh{dirpad}_results/preds{id}.npy', pred_top)
 
 
 # Read BH configuration file

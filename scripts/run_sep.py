@@ -10,8 +10,7 @@ from sep_script import Run_Sep
 from blendhunter.config import BHConfig
 
 
-def sep_results(out_path, blends=None, no_blends=None, sigma_val=None,
-                dir_str='bh_', verbose=True):
+def sep_results(out_path, blends, no_blends, id, dir_str='bh_', verbose=True):
     """SEP Results
 
     Notes
@@ -19,7 +18,7 @@ def sep_results(out_path, blends=None, no_blends=None, sigma_val=None,
     blends=blended images
     no_blends=non blended images
     """
-    suffix = '_pad' if 'pad' in dir_str else ''
+    dirpad = '_pad' if 'pad' in dir_str else ''
 
     sep_runner = Run_Sep()
     flags_b, sep_res_b = sep_runner.process(blends)
@@ -33,10 +32,10 @@ def sep_results(out_path, blends=None, no_blends=None, sigma_val=None,
     # Concatenate flags
     flags = np.concatenate((flags_b, flags_nb), axis=0)
 
-    np.save(out_path + f'/sep_results{suffix}/flags{sigma_val}.npy', flags)
+    np.save(out_path + f'/sep{suffix}_results/flags{id}.npy', flags)
 
     if verbose:
-        print(f'Sep Accuracy (sigma_noise = {sigma_val}): {acc * 100}%')
+        print(f'Sep Accuracy (id = {id}): {acc * 100}%')
 
     n_miss = ((len(np.where(flags_b == 16)[0]) +
                len(np.where(flags_nb == 16)[0])) /
@@ -64,7 +63,7 @@ def get_sep_results(out_path, noise_sigma, n_noise_real, dir_str='bh_',
                              allow_pickle=True)
             no_blends = np.load(f'{path}/not_blended_noisy{id}.npy',
                                 allow_pickle=True)
-            res = sep_results(out_path, blends, no_blends, sigma, dir_str,
+            res = sep_results(out_path, blends, no_blends, id, dir_str,
                               verbose)
 
 

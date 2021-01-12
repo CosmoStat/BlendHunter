@@ -1,24 +1,29 @@
-#Script with annex codes to import in notebooks for results visualisation
+"""Annex New
+
+Script with annex codes to import in notebooks for results visualisation.
+
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns #install seaborn
+import seaborn as sns
 
 #Import function
 def import_(path):
     img = np.load(path, allow_pickle=True)
     return img
 
-"""Functions to retrieve results for BH and sep"""
+# Functions to retrieve results for BH and sep
 
 def get_bh_results(path_bh_results = None, pad_images=False):
     sigmas = [5,14,18,26,35,40]
     noise_realisation = ['',1,2,3,4]
     datasets = [[str(j)+str(i) for i in noise_realisation]  for j in sigmas]
-    
+
     """Get results for padded images"""
     if pad_images:
         return [[import_(path_bh_results+'/preds_pad{}.npy'.format(i)) for i in datasets[j]] for j in range(len(datasets))]
-    
+
     else:
         return [[import_(path_bh_results+'/pred_{}.npy'.format(i)) for i in datasets[j]] for j in range(len(datasets))]
 
@@ -26,73 +31,73 @@ def get_sep_results(path_sep_results=None, pad_images=False):
     sigmas = [5,14,18,26,35,40]
     noise_realisation = ['',1,2,3,4]
     datasets = [[str(j)+str(i) for i in noise_realisation]  for j in sigmas]
-    
+
     """Get results for padded images"""
     if pad_images:
         return [[import_(path_sep_results+'/flags_pad{}.npy'.format(i)) for i in datasets[j]] for j in range(len(datasets))]
     else:
         return [[import_(path_sep_results+'/flags{}.npy'.format(i)) for i in datasets[j]] for j in range(len(datasets))]
 
-    
+
 """Get distance between galaxies for blended images"""
 def get_distance(path):
     #X parameter extracted from test images
-    param_x = np.load(path+"/param_x_total.npy", allow_pickle=True)[36000:40000]    
+    param_x = np.load(path+"/param_x_total.npy", allow_pickle=True)[36000:40000]
     #Y parameter extracted from test images
-    param_y = np.load(path+"/param_y_total.npy", allow_pickle=True)[36000:40000]    
+    param_y = np.load(path+"/param_y_total.npy", allow_pickle=True)[36000:40000]
     #Compute distance
     distance = np.array([np.sqrt(param_x**2 + param_y**2)[i][0] for i in range(4000)])
-    
+
     return distance
 
 
 """Get ellipticity components"""
 def get_ellipticity(path = None, get_e1=False, get_e2=False):
     if get_e1:
-        e1 = np.load(path+"/e1_total.npy", allow_pickle=True)      
+        e1 = np.load(path+"/e1_total.npy", allow_pickle=True)
         return e1
-    
+
     if get_e2:
         e2 = np.load(path+"/e2_total.npy", allow_pickle=True)[36000:40000]
         return e2
     else:
         e1 = np.load(path+"/e1_total.npy", allow_pickle=True)
         e2 = np.load(path+"/e2_total.npy", allow_pickle=True)[36000:40000]
-        
-        return e1, e2  
-    
+
+        return e1, e2
+
 """Get missed blends (default) of false positives for bh and sep """
 def get_bh_errors(results=None, get_false_positives=False):
 
     if get_false_positives:
         return np.where(results[4000:8000] != 'not_blended')[0]
-    
+
     else:
         return np.where(results[0:4000] != 'blended')[0]
 
-    
+
 def get_sep_errors(results=None, get_false_positives=False, get_unidentified=False):
-    
+
     if get_false_positives:
         return np.where(results[4000:8000] != 0)[0]
-    
+
     if get_unidentified:
         return np.where(results[0:8000] == 16)[0]
-    
+
     else:
         return np.where(results[0:4000] != 1)[0]
 
-    
+
 """Get accuracy for bh"""
 def get_acc_bh(results=None, path=None):
     true = np.load(path + '/labels.npy', allow_pickle=True)
     return np.sum(results == true)/true.size
-    
+
 """Get accuracy for bh"""
 def get_acc_sep(results=None):
     return (len(np.where(results[0:4000] == 1)[0])+len(np.where(results[4000:8000] == 0)[0]))/(len(results[0:4000])+len(results[4000:8000]))
-    
-    
+
+
 """Get distance for missed blends by bh and sep"""
 def get_distance_errors(distances=None, errors=None):
     return [distances[i] for i in errors]
@@ -109,28 +114,28 @@ def count_per_bin(data =None, get_bins =False, bins_=int(180/3)):
         return n, bins[1:], bins
     else:
         return n
-    
+
 """Computation of error ratios"""
 def acc_ratio_bins(data=None, N=None, bins=int(180/3)):
     """N being the total obs per bin"""
     n = count_per_bin(data, bins_=bins)
-    ratio = 1 - (n/N)   
+    ratio = 1 - (n/N)
     return ratio
 
 """Compute mean accuracy for each noise level """
 def get_mean_acc(data=None, data_total=None, nb_ratios=60, get_mean_total=False):
-    
+
     if get_mean_total:
         #Get total number per bin and mean distance per bin for the whole test set
-        n_total, mean_dist, bin_edges = count_per_bin(data=data_total, get_bins=True)  
+        n_total, mean_dist, bin_edges = count_per_bin(data=data_total, get_bins=True)
         return mean_dist
     else:
         """Get total number per bin and mean distance per bin for the whole test set"""
-        n_total, mean_dist, bin_edges = count_per_bin(data=data_total, get_bins=True)  
-        
+        n_total, mean_dist, bin_edges = count_per_bin(data=data_total, get_bins=True)
+
         """Compute accuracy ratio for each bin, for each noise realisation and noise level"""
         acc_ratios = [[acc_ratio_bins(x[j], N= n_total , bins=bin_edges) for j in range(len(x))] for x in data]
-        
+
         """For each noise level, create sub_lists of accuracy ratios for corresponding bins but with all noise realisations"""
         sub_ratios = [[np.array([acc_ratios[k][i][j] for i in range(len(acc_ratios[k]))]) for j in range(nb_ratios)] for k in                                   range(len(acc_ratios))]
         """Compute the mean on each sub_list.
@@ -139,16 +144,16 @@ def get_mean_acc(data=None, data_total=None, nb_ratios=60, get_mean_total=False)
         return [np.array([np.mean(k[i]) for i in range(len(k))]) for k in sub_ratios]
 
 
-"""Plot distance histograms for each noise level """    
+"""Plot distance histograms for each noise level """
 def plot_distribution(total_data, bh_data=None, sep_data=None, bh_distribution=False, sep_distribution=False,
-                     font_size=13, TITLE='None', nb_col=2, nb_lines=3, sigma_val=None, 
+                     font_size=13, TITLE='None', nb_col=2, nb_lines=3, sigma_val=None,
                      xlabel='Distance between objects (pixels)', ylabel='Number of images', legend_size=18, size_plot=(16,20)):
     #Font dictionnary
     font = {'family': 'monospace',
             'color':  'k',
             'weight': 'normal',
             'size': font_size}
-    
+
     if bh_distribution:
         #Seaborn theme
         sns.set(context='notebook', style='whitegrid', palette='deep')
@@ -165,9 +170,9 @@ def plot_distribution(total_data, bh_data=None, sep_data=None, bh_distribution=F
             axs[i].set_xlabel(xlabel, fontdict = font)
             axs[i].tick_params(axis='both', which='major', labelsize=12)
             axs[i].legend(borderaxespad=0.1, loc="upper left", fontsize=legend_size, prop ={'family': 'monospace'})
-    
+
         plt.show()
-        
+
     if sep_distribution:
         sns.set(context='notebook', style='whitegrid', palette='deep')
         fig, axs = plt.subplots(nb_lines,nb_col, figsize=size_plot, sharex=False)
@@ -181,9 +186,9 @@ def plot_distribution(total_data, bh_data=None, sep_data=None, bh_distribution=F
             axs[i].set_xlabel(xlabel, fontdict = font)
             axs[i].tick_params(axis='both', which='major', labelsize=12)
             axs[i].legend(borderaxespad=0.1, loc="upper left", fontsize=legend_size, prop ={'family': 'monospace'})
-    
+
         plt.show()
-    
+
     else:
         sns.set(context='notebook', style='whitegrid', palette='deep')
         fig, axs = plt.subplots(nb_lines,nb_col,figsize=size_plot, sharex=False)
@@ -199,15 +204,15 @@ def plot_distribution(total_data, bh_data=None, sep_data=None, bh_distribution=F
             axs[i].tick_params(axis='both', which='major', labelsize=12)
             axs[i].legend(borderaxespad=0.1, loc="upper left", fontsize=legend_size, prop ={'family': 'monospace'})
 
-    
+
         plt.show()
 
-        
-"""Plot accuracy according to distance, for each noise level """        
+
+"""Plot accuracy according to distance, for each noise level """
 def plot_acc_distances(x_axis =None, accuracy_bh=None, accuracy_sep=None,
                        TITLE = 'None', nb_col=2, nb_lines=3, size_plot=(20,17) , sigma_val=None,
                       xlabel = 'Distance between objects (pixels)', ylabel = 'Accuracy (%)', filling_label='Gain on SExtractor',
-                      label2='SExtractor'):    
+                      label2='SExtractor'):
     font = {'family': 'monospace',
         'color':  'k',
         'weight': 'normal',
@@ -226,10 +231,9 @@ def plot_acc_distances(x_axis =None, accuracy_bh=None, accuracy_sep=None,
         axs[i].set_ylim(0,100)
         axs[i].tick_params(axis='both', which='major', labelsize=15)
         axs[i].fill_between(x_axis, 100*accuracy_bh[j], y2=100*accuracy_sep[j],
-                     where=100*accuracy_bh[j] > 100*accuracy_sep[j], 
+                     where=100*accuracy_bh[j] > 100*accuracy_sep[j],
                             interpolate=True, hatch="/", edgecolor="k", alpha=0.3 ,label=filling_label)
         axs[i].legend(borderaxespad=0.1, loc="lower center", fontsize=18, prop ={'family': 'monospace','size': 15})
 
     plt.subplots_adjust(hspace=0.4)
     plt.show()
-    
