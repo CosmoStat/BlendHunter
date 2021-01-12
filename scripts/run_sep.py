@@ -32,7 +32,7 @@ def sep_results(out_path, blends, no_blends, id, dir_str='bh_', verbose=True):
     # Concatenate flags
     flags = np.concatenate((flags_b, flags_nb), axis=0)
 
-    np.save(out_path + f'/sep{suffix}_results/flags{id}.npy', flags)
+    np.save(out_path + f'/sep{dirpad}_results/flags{id}.npy', flags)
 
     if verbose:
         print(f'Sep Accuracy (id = {id}): {acc * 100}%')
