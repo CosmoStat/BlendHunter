@@ -79,8 +79,8 @@ def get_images(sample, add_noise_img=False, sigma_noise=None,
                         range(sample.size)])
 
 
-def prep_data(out_path, noise_sigma, n_noise_real, dir_str='bh_',
-              verbose=True):
+def prep_data(out_path, noise_sigma, n_noise_real, blended, not_blended,
+              dir_str='bh_', verbose=True):
 
     for sigma in noise_sigma:
         for noise_real in range(n_noise_real):
@@ -96,9 +96,8 @@ def prep_data(out_path, noise_sigma, n_noise_real, dir_str='bh_',
                       for sample in (blended, not_blended)]
 
             # Save noisy test images for comparison w/ SExtractor
-            np.save(f'{path}/blended_noisy{id}.npy', blended[36000:40000])
-            np.save(f'{path}/not_blended_noisy{id}.npy',
-                    not_blended[36000:40000])
+            np.save(f'{path}/blended_noisy{id}.npy', blended)
+            np.save(f'{path}/not_blended_noisy{id}.npy', not_blended)
 
             # Train-valid-test split
             CreateTrainData(images, path).prep_axel(path_to_output=path)
@@ -110,13 +109,16 @@ out_path = bhconfig['out_path']
 input = bhconfig['in_path']
 noise_sigma = bhconfig['noise_sigma']
 n_noise_real = bhconfig['n_noise_real']
+sample_range = slice(*bhconfig['sample_range'])
 
 # Getting the images
-blended = np.load(input + '/blended/gal_obj_0.npy', allow_pickle=True)
-not_blended = np.load(input + '/not_blended/gal_obj_0.npy', allow_pickle=True)
+blended = np.load(input + '/blended/gal_obj_0.npy',
+                  allow_pickle=True)[sample_range]
+not_blended = np.load(input + '/not_blended/gal_obj_0.npy',
+                      allow_pickle=True)[sample_range]
 
 # Prepare non padded images
-# prep_data(out_path, noise_sigma, n_noise_real)
-
+prep_data(out_path, noise_sigma, n_noise_real, blended, not_blended)
 # Prepare padded images
-prep_data(out_path, noise_sigma, n_noise_real, dir_str='bh_pad')
+prep_data(out_path, noise_sigma, n_noise_real, blended, not_blended,
+          dir_str='bh_pad')
