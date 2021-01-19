@@ -413,3 +413,15 @@ class CreateTrainData(object):
 
         # Save seg_map
         # np.save(path_to_output+'/test_seg_map.npy', test_map)
+
+    def prep_cosmos(self):
+
+        split1 = self._split_array(self.images[0], self.train_fractions)
+        split2 = self._split_array(self.images[1], self.train_fractions)
+
+        train_set = split1[0], split2[0]
+        valid_set = split1[1], split2[1]
+        test_set = split1[2], split2[2]
+
+        self._write_labels(test_set)
+        self._write_images(np.vstack(test_set), self._test_path)
