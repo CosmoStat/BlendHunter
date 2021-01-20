@@ -40,7 +40,8 @@ def get_acc(dir_name, out_path, noise_sigma, n_noise_real, labels, ext='.npy',
         res_sigma.append(res_real)
 
     if average:
-        return [metric(res_sigma, axis=1) for metric in (np.mean, np.std)]
+        return [metric(res_sigma, axis=1).flatten()
+                for metric in (np.mean, np.std)]
 
     else:
         return np.array(res_sigma)

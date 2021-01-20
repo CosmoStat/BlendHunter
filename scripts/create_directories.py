@@ -36,7 +36,7 @@ noise_sigma = bhconfig['noise_sigma']
 n_noise_real = bhconfig['n_noise_real']
 
 # Generate 35 directories for non padded images
-create_dirs(out_path, noise_sigma, n_noise_real)
+# create_dirs(out_path, noise_sigma, n_noise_real)
 
 # Generate 35 directories for padded images
 create_dirs(out_path, noise_sigma, n_noise_real, dir_str='bh_pad')
@@ -44,13 +44,13 @@ create_dirs(out_path, noise_sigma, n_noise_real, dir_str='bh_pad')
 # Generate results directories, directories for regrouping the pre-trained
 # weights and directories for real data (Cosmos images)
 for dir in (
-    'bh_results',
+    # 'bh_results',
     'bh_pad_results',
-    'sep_results',
+    # 'sep_results',
     'sep_pad_results',
-    'pretrained_weights',
+    # 'pretrained_weights',
     'pretrained_weights_pad',
-    'bh_real',
+    # 'bh_real',
     'bh_real_pad'
 ):
     make_dir(os.path.join(out_path, dir))
