@@ -44,7 +44,7 @@ not_blended = np.load(input + '/not_blended/gal_obj_0.npy',
                       allow_pickle=True)[sample_range]
 
 # Prepare non padded images
-prep_data(out_path, noise_sigma, n_noise_real, blended, not_blended)
+# prep_data(out_path, noise_sigma, n_noise_real, blended, not_blended)
 # Prepare padded images
 prep_data(out_path, noise_sigma, n_noise_real, blended, not_blended,
           dir_str='bh_pad')
