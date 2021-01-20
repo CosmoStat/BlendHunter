@@ -39,10 +39,11 @@ def run_bh(out_path, noise_sigma, n_noise_real, dir_str='bh_',
             # Predict Results
             pred_top = bh.predict(path + '/BlendHunterData/test/test',
                                   weights_type='top')
-            true = np.load(path + '/BlendHunterData/test/test/labels.npy')
 
-            print("Match Top:", np.sum(pred_top == true) / true.size)
-            print("Error Top", np.sum(pred_top != true) / true.size)
+            if verbose:
+                true = np.load(path + '/BlendHunterData/test/test/labels.npy')
+                print("Match Top:", np.sum(pred_top == true) / true.size)
+                print("Error Top", np.sum(pred_top != true) / true.size)
 
             # Save history and results
             np.save(path + '/BlendHunterData/test/test/history.npy', hist)
