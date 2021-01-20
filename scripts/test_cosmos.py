@@ -9,6 +9,9 @@ def prep_cosmos(out_path, blended, not_blended, dir_str=''):
     path = f'{out_path}/cosmos_data{dir_str}'
     pad = 'pad' in dir_str
 
+    if verbose:
+        print(f'Processing {path}')
+
     images = [sf.get_images(sample, add_padding=pad, add_noise_sigma=False)
               for sample in (blended, not_blended)]
 

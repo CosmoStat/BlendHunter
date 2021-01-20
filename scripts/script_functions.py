@@ -29,9 +29,9 @@ def get_images(sample, add_padding=True, add_noise_sigma=True,
 
     images = []
 
-    for i, image in enumerate(sample):
+    for i, sample_image in enumerate(sample):
 
-        image = image['galsim_image'][0].array
+        image = sample_image['galsim_image'][0].array
 
         if add_padding:
             image = pad2d(image, (7, 7))
@@ -45,5 +45,6 @@ def get_images(sample, add_padding=True, add_noise_sigma=True,
             image /= image.max()
 
         images.append(image)
+        sample_image['galsim_image_noisy'] = image
 
     return np.array(images)
