@@ -1,5 +1,5 @@
 out_path: /Volumes/Grogu/Projects/deblending/BlendHunter
-in_path: /Volumes/Grogu/Projects/deblending/BlendHunter/sims
+in_path: /Volumes/Grogu/Projects/deblending/BlendHunter/axel_sims
 cosmos_path: /Volumes/Grogu/Projects/deblending/BlendHunter/axel_cosmos
 noise_sigma:
   - 5
@@ -9,6 +9,6 @@ noise_sigma:
   - 35
   - 40
 n_noise_real: 5
-sample_range:
+sep_sample_range:
   - 36000
   - 40000
