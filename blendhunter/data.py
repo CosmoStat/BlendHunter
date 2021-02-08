@@ -61,7 +61,6 @@ class CreateTrainData(object):
         self.blend_images = blend_images
         self.blend_fractions = blend_fractions
         self.blend_method = blend_method
-        self._image_num = 0
 
         self._make_output_dirs()
 
@@ -230,8 +229,9 @@ class CreateTrainData(object):
         """
 
         min_shape = np.array([48, 48])
+        zero_pad = np.log10(images.size).astype(int) + 1
 
-        for image in images:
+        for image_num, image in enumerate(images):
 
             image = self._rescale(image)
 
@@ -240,8 +240,8 @@ class CreateTrainData(object):
             if np.sum(shape_diff) > 0:
                 image = self._pad(image, shape_diff)
 
-            cv2.imwrite('{}/image_{}.png'.format(path, self._image_num), image)
-            self._image_num += 1
+            cv2.imwrite('{0}/image_{2:0{1}d}.png'.format(path, zero_pad,
+                        image_num), image)
 
     def _write_data_set(self, data_list, path_list):
         """ Write Data Set

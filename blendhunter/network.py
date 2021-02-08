@@ -117,7 +117,7 @@ class BlendHunter(object):
         self._target_size = self._image_shape[:2]
 
     def _load_generator(self, input_dir, batch_size=None,
-                        class_mode=None, augmentation=True):
+                        class_mode=None, augmentation=False):
         """ Load Generator
         Load files from an input directory into a Keras generator.
         Parameters

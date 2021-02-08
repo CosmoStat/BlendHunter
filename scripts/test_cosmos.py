@@ -46,7 +46,8 @@ def get_bh_preds(out_path, noise_sigma, n_noise_real, dir_str='bh_',
                                   weights_type='top')
 
             if verbose:
-                true = np.load(path + '/BlendHunterData/test/test/labels.npy')
+                true = np.load(f'{out_path}/cosmos_data{dirpad}/' +
+                               'BlendHunterData/test/test/labels.npy')
                 print("Match Top:", np.sum(pred_top == true) / true.size)
                 print("Error Top", np.sum(pred_top != true) / true.size)
 
@@ -69,8 +70,9 @@ blended = np.load(input + '/blended/gal_obj_0.npy',
 not_blended = np.load(input + '/not_blended/gal_obj_0.npy',
                       allow_pickle=True)[cosmos_sample_range]
 
-# prep_data(out_path, blended, not_blended)
-# prep_cosmos(out_path, blended, not_blended, dir_str='_pad')
+# prep_cosmos(out_path, blended, not_blended)
+prep_cosmos(out_path, blended, not_blended, dir_str='_pad')
 
 # get_bh_preds(out_path, noise_sigma, n_noise_real)
-get_bh_preds(out_path, noise_sigma, n_noise_real, dir_str='bh_pad')
+# get_bh_preds(out_path, noise_sigma, n_noise_real, dir_str='bh_pad')
+get_bh_preds(out_path, noise_sigma, 1, dir_str='bh_pad')
