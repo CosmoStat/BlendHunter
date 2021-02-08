@@ -229,7 +229,7 @@ class CreateTrainData(object):
         """
 
         min_shape = np.array([48, 48])
-        zero_pad = np.log10(images.size).astype(int) + 1
+        zero_pad = np.log10(images.shape[0]).astype(int) + 1
 
         for image_num, image in enumerate(images):
 
@@ -278,7 +278,6 @@ class CreateTrainData(object):
                            [self.classes[1]] * sizes[1]])
 
         np.save('{}/labels.npy'.format(self._test_path), labels)
-
 
     def _write_positions(self, pos_list):
 
