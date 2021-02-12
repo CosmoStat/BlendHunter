@@ -13,7 +13,10 @@ def prep_cosmos(out_path, blended, not_blended, dir_str='', verbose=True):
     if verbose:
         print(f'Processing {path}')
 
-    images = [sf.get_images(sample, add_padding=pad, add_noise_sigma=False)
+    # images = [sf.get_images(sample, add_padding=pad, add_noise_sigma=False)
+    #           for sample in (blended, not_blended)]
+
+    images = [sf.get_images(sample, add_pad_noise=pad, add_noise_sigma=False)
               for sample in (blended, not_blended)]
 
     # Save noisy test images for comparison w/ SExtractor
@@ -74,5 +77,5 @@ not_blended = np.load(input + '/not_blended/gal_obj_0.npy',
 prep_cosmos(out_path, blended, not_blended, dir_str='_pad')
 
 # get_bh_preds(out_path, noise_sigma, n_noise_real)
-# get_bh_preds(out_path, noise_sigma, n_noise_real, dir_str='bh_pad')
-get_bh_preds(out_path, noise_sigma, 1, dir_str='bh_pad')
+get_bh_preds(out_path, noise_sigma, n_noise_real, dir_str='bh_pad')
+# get_bh_preds(out_path, noise_sigma, 1, dir_str='bh_pad')

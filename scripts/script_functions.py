@@ -13,8 +13,8 @@ def sigma_from_SNR(data, SNR, map):
 
 
 def get_images(sample, add_padding=True, add_noise_sigma=True,
-               sigma_noise=None, fixed_snr=False, SNR_target=None,
-               seg_map=None):
+               add_pad_noise=True, sigma_noise=None, fixed_snr=False,
+               SNR_target=None, seg_map=None):
     """Function to get images
 
     Notes
@@ -38,6 +38,11 @@ def get_images(sample, add_padding=True, add_noise_sigma=True,
 
         if add_noise_sigma:
             image = add_noise(image, sigma=sigma_noise)
+
+        if add_pad_noise:
+            image = np.pad(image, 2, constant_values=np.nan)
+            noise = sigma * np.random.randn(image[np.isnan(image)].size)
+            image[np.isnan(image)] = noise
 
         if fixed_snr:
             sigma = sigma_from_SNR(image, SNR=SNR_target, map=seg_map[i])
