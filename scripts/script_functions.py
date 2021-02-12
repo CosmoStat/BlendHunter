@@ -41,7 +41,7 @@ def get_images(sample, add_padding=True, add_noise_sigma=True,
 
         if add_pad_noise:
             image = np.pad(image, 2, constant_values=np.nan)
-            noise = sigma * np.random.randn(image[np.isnan(image)].size)
+            noise = sigma_noise * np.random.randn(image[np.isnan(image)].size)
             image[np.isnan(image)] = noise
 
         if fixed_snr:
