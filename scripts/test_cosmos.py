@@ -16,7 +16,8 @@ def prep_cosmos(out_path, blended, not_blended, dir_str='', verbose=True):
     # images = [sf.get_images(sample, add_padding=pad, add_noise_sigma=False)
     #           for sample in (blended, not_blended)]
 
-    images = [sf.get_images(sample, add_pad_noise=pad, add_noise_sigma=False)
+    images = [sf.get_images(sample, add_pad_noise=pad, sigma_noise=14.5,
+                            add_padding=False, add_noise_sigma=False)
               for sample in (blended, not_blended)]
 
     # Save noisy test images for comparison w/ SExtractor
