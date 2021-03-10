@@ -226,7 +226,7 @@ class Run_Sep:
             # img = obj['galsim_image'][epoch].array
 
             # Retrieve image w/ noise
-            img = obj['galsim_image_noisy']
+            img = obj['galsim_image'][0].array
 
             # Retrieve denoised image
             # img = obj['denoised_img']

@@ -1,5 +1,7 @@
 import numpy as np
 from blendhunter.config import BHConfig
+import os
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 # Set plaidml backend for Keras before importing blendhunter
 import plaidml.keras

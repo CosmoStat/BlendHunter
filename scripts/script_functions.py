@@ -50,6 +50,6 @@ def get_images(sample, add_padding=True, add_noise_sigma=True,
             image /= image.max()
 
         images.append(image)
-        sample_image['galsim_image_noisy'] = image
+        sample_image['galsim_image'] = image
 
     return np.array(images)

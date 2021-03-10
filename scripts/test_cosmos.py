@@ -3,6 +3,8 @@ from blendhunter.config import BHConfig
 from blendhunter.data import CreateTrainData
 from blendhunter import BlendHunter
 import script_functions as sf
+import os
+os.environ['CUDA_VISIBLE_DEVICES'] = '-1'
 
 
 def prep_cosmos(out_path, blended, not_blended, dir_str='', verbose=True):
@@ -72,7 +74,7 @@ cosmos_sample_range = slice(*bhconfig['cosmos_sample_range'])
 blended = np.load(input + '/blended/gal_obj_0.npy',
                   allow_pickle=True)[cosmos_sample_range]
 not_blended = np.load(input + '/not_blended/gal_obj_0.npy',
-                      allow_pickle=True)[cosmos_sample_range]
+                  allow_pickle=True)[cosmos_sample_range]
 
 # prep_cosmos(out_path, blended, not_blended)
 prep_cosmos(out_path, blended, not_blended, dir_str='_pad')
