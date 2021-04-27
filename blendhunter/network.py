@@ -1,35 +1,32 @@
 # -*- coding: utf-8 -*-
 
 """ NETWORK
-
 This module defines the BlendHunter class which can be used to retrain the
 network or use predefined weights to make predictions on unseen data.
-
 :Author: Samuel Farrens <samuel.farrens@cea.fr>
-
 """
 
 import os
+import random
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 from time import time
 from cv2 import imread
-from keras.preprocessing.image import ImageDataGenerator
-from keras.models import Sequential, Model
-from keras.layers import Dropout, Flatten, Dense, Input
-from keras.applications import VGG16
-from keras.optimizers import Adam, SGD
-from keras.callbacks import ModelCheckpoint
-from keras.callbacks import EarlyStopping
-from keras.callbacks import ReduceLROnPlateau
+from tensorflow.keras.preprocessing.image import ImageDataGenerator
+from tensorflow.keras.models import Sequential, Model
+from tensorflow.keras.layers import Dropout, Flatten, Dense, Input
+from tensorflow.keras.applications import VGG16
+from tensorflow.keras.optimizers import Adam, SGD
+from tensorflow.keras.callbacks import ModelCheckpoint
+from tensorflow.keras.callbacks import EarlyStopping
+from tensorflow.keras.callbacks import ReduceLROnPlateau
+from tensorflow.keras import regularizers
 
 
 class BlendHunter(object):
     """ BlendHunter
-
     Class for identifying blended galaxy images in postage stamps.
-
     Parameters
     ----------
     image_shape : tuple, optional
@@ -43,12 +40,11 @@ class BlendHunter(object):
     final_model_file : str, optional
         File name of the final model weights, default is
         'final_model_weights'
-
     """
 
     def __init__(self, image_shape=None, classes=('blended', 'not_blended'),
                  weights_path='./weights', top_model_file='top_model_weights',
-                 final_model_file='final_model_weights', verbose=0):
+                 final_model_file='final_model_weights', verbose=2):
 
         self._image_shape = image_shape
         self._classes = classes
@@ -61,37 +57,30 @@ class BlendHunter(object):
     @staticmethod
     def _format(path, name):
         """ Format
-
         Add path to name.
-
         Parameters
         ----------
         path : str
             Base path
         name : str
             Path extension
-
         Returns
         -------
         str
             Formated path
-
         """
 
         return '{}/{}'.format(path, name)
 
     def getkwarg(self, key, default=None):
         """ Get keyword agrument
-
         Get value from keyword agruments if it exists otherwise return default.
-
         Parameters
         ----------
         key : str
             Dictionary key
         default : optional
             Default value
-
         """
 
         return self._kwargs[key] if key in self._kwargs else default
@@ -99,33 +88,26 @@ class BlendHunter(object):
     @staticmethod
     def _get_image_shape(file):
         """ Get Image Shape
-
         Get the input image shape from an example image.
-
         Parameters
         ----------
         file : str
             File name
-
         Returns
         -------
         tuple
             Image shape
-
         """
 
         return imread(file).shape
 
     def _get_target_shape(self, image_path=None):
         """ Get Target Shape
-
         Get the network target shape from the image shape.
-
         Parameters
         ----------
         image_path : str, optional
             Path to image file
-
         """
 
         if isinstance(self._image_shape, type(None)) and image_path:
@@ -137,9 +119,7 @@ class BlendHunter(object):
     def _load_generator(self, input_dir, batch_size=None,
                         class_mode=None, augmentation=False):
         """ Load Generator
-
         Load files from an input directory into a Keras generator.
-
         Parameters
         ----------
         input_dir : str
@@ -150,12 +130,10 @@ class BlendHunter(object):
             Generator class mode
         shuffle : bool, optional
             Option to shuffle input files
-
         Returns
         -------
         keras_preprocessing.image.DirectoryIterator
             Keras generator
-
         """
 
         if augmentation:
@@ -176,19 +154,15 @@ class BlendHunter(object):
 
     def _get_feature(self, input_dir):
         """ Get Feature
-
         Get network feature and labels from VGG16 model.
-
         Parameters
         ----------
         input_dir : str
             Input directory
-
         Returns
         -------
         tuple
             VGG16 bottleneck feature, class labels
-
         """
 
         generator = self._load_generator(input_dir,
@@ -201,9 +175,7 @@ class BlendHunter(object):
     @staticmethod
     def _save_data(data, data_type, file_path):
         """ Save Data
-
         Save data to file.
-
         Parameters
         ----------
         data : np.ndarray
@@ -212,7 +184,6 @@ class BlendHunter(object):
             Type of feature to be saved
         file_path : str
             File path
-
         """
 
         file_name = '{}_{}.npy'.format(file_path, data_type)
@@ -221,16 +192,13 @@ class BlendHunter(object):
     @staticmethod
     def _load_data(data_type, file_path):
         """ Load Data
-
         Load data from file.
-
         Parameters
         ----------
         data_type : str
             Type of feature to be loaded
         file_path : str
             File path
-
         """
 
         file_name = '{}_{}.npy'.format(file_path, data_type)
@@ -242,19 +210,14 @@ class BlendHunter(object):
     @staticmethod
     def _build_vgg16_model(input_shape=None):
         """ Build VGG16 Model
-
         Build VGG16 CNN model using imagenet weights.
-
         Parameters
         ----------
         input_shape : str, optional
             Input data shape
-
         Returns
         -------
-
             VGG16 model
-
         """
 
         return VGG16(include_top=False, weights='imagenet',
@@ -262,9 +225,7 @@ class BlendHunter(object):
 
     def _get_features(self):
         """ Get Features
-
         Get the network (bottleneck) features from the VGG16 model.
-
         """
 
         self._vgg16_model = self._build_vgg16_model()
@@ -284,9 +245,7 @@ class BlendHunter(object):
 
     def _load_features(self):
         """ Load Bottleneck Features
-
         Load VGG16 bottleneck features.
-
         """
 
         for feature_name in ('bottleneck', 'labels'):
@@ -301,11 +260,10 @@ class BlendHunter(object):
                     value[feature_name] = self._load_data(key, out_path)
 
     @staticmethod
-    def _build_top_model(input_shape, dense_output=(256, 1024), dropout=0.1):
+    def _build_top_model(input_shape, dense_output=(256, 512, 1024),
+                         dropout=0.1):
         """ Build Top Model
-
         Build the fully connected layers of the network.
-
         Parameters
         ----------
         input_shape : tuple
@@ -314,14 +272,11 @@ class BlendHunter(object):
             Size of dense output layers, default is (256, 1024)
         dropout : float, optional
             Dropout rate, default is 0.1
-
         Returns
         -------
         keras.model
             Fully connected top model
-
         """
-
         model = Sequential()
         model.add(Flatten(input_shape=input_shape))
         model.add(Dense(dense_output[0]))
@@ -333,9 +288,7 @@ class BlendHunter(object):
 
     def _train_top_model(self):
         """ Train Top Model
-
         Train fully connected top model of the network.
-
         """
 
         self._load_features()
@@ -382,9 +335,7 @@ class BlendHunter(object):
 
     def plot_history(self):
         """ Plot History
-
         Plot the training history metrics.
-
         """
 
         sns.set(style="darkgrid")
@@ -417,14 +368,12 @@ class BlendHunter(object):
 
     def _freeze_layers(self, model, depth):
         """ Freeze Network Layers
-
         Parameters
         ----------
         model :
             Keras model
         depth : int
             Depth of layers to be frozen
-
         """
 
         for layer in model.layers[:depth]:
@@ -433,21 +382,16 @@ class BlendHunter(object):
     def _build_final_model(self, load_top_weights=False,
                            load_final_weights=False):
         """ Build Final Model
-
         Build the final BlendHunter model.
-
         Parameters
         ----------
         load_top_weights : bool
             Option to load the top model weights
         load_final_weights : bool
             Option to load the final model weights
-
         Returns
         -------
-
             Final model
-
         """
 
         vgg16_model = self._build_vgg16_model(self._image_shape)
@@ -467,17 +411,15 @@ class BlendHunter(object):
 
     def _fine_tune(self):
         """ Fine Tune
-
         Fine tune the final model training.
-
         """
 
         model = self._build_final_model(load_top_weights=True)
 
-        self._freeze_layers(model, 18)
+        self._freeze_layers(model, 15)
 
         model.compile(loss='binary_crossentropy',
-                      optimizer=Adam(lr=0.0001),
+                      optimizer=Adam(lr=1e-6, decay=1e-6),
                       metrics=['binary_accuracy'])
 
         train_gen = self._load_generator(self._features['train']['dir'],
@@ -499,19 +441,24 @@ class BlendHunter(object):
         callbacks.append(ReduceLROnPlateau(monitor='val_loss', factor=0.5,
                                            patience=5, min_delta=0.001,
                                            cooldown=2, verbose=self._verbose))
+    #    callbacks.append(LoggingCallback(filetxt=logfile, log=write_log)])
 
-        model.fit_generator(train_gen, steps_per_epoch=train_gen.steps,
+        history_tune1 = model.fit_generator(
+                            train_gen,
+                            steps_per_epoch=train_gen.steps,
                             epochs=self._epochs_fine,
                             callbacks=callbacks,
                             validation_data=valid_gen,
                             validation_steps=valid_gen.steps,
-                            verbose=self._verbose)
+                            verbose=self._verbose
+                        )
 
         self._freeze_layers(model, 19)
         model.layers[17].trainable = True
+        model.layers[18].trainable = True
 
         model.compile(loss='binary_crossentropy',
-                      optimizer=SGD(lr=10e-5),
+                      optimizer=Adam(lr=1e-6, decay=1e-6),
                       metrics=['binary_accuracy'])
 
         model.fit_generator(train_gen, steps_per_epoch=train_gen.steps,
@@ -522,19 +469,18 @@ class BlendHunter(object):
                             verbose=self._verbose)
 
         model.save_weights('{}.h5'.format(self._final_model_file))
+        print(history_tune1.history.keys())
 
     def train(self, input_path, get_features=True, train_top=True,
               fine_tune=True, train_dir_name='train',
-              valid_dir_name='validation', epochs_top=500, epochs_fine=50,
+              valid_dir_name='validation', epochs_top=500, epochs_fine=80,
               batch_size_top=250, batch_size_fine=16, save_bottleneck=True,
               bottleneck_file='bottleneck_features',
               save_labels=True, labels_file='labels',
               fine_tune_file='fine_tune_checkpoint',
               top_model_file='top_model_weights', **kwargs):
         """ Train
-
         Train the BlendHunter network.
-
         Parameters
         ----------
         input_path : str
@@ -565,7 +511,6 @@ class BlendHunter(object):
         fine_tune_file : str, optional
             Training checkpoint for the fine tuning step, default is
             'fine_tune_checkpoint'
-
         """
 
         start = time()
@@ -603,9 +548,7 @@ class BlendHunter(object):
     def predict(self, input_path=None, input_path_keras=None, input_data=None,
                 weights_type='fine'):
         """ Predict
-
         Predict classes for test data
-
         Parameters
         ----------
         input_path : str
@@ -617,12 +560,10 @@ class BlendHunter(object):
             Array of input images
         weights_type : str, optional {'fine', 'top'}
             Type of weights to use for predition, default is 'fine'
-
         Returns
         -------
         dict
             Dictionary of file names and corresponding classes
-
         """
 
         if input_path:
@@ -648,6 +589,7 @@ class BlendHunter(object):
                                             batch_size=1)
             self.filenames = test_gen.filenames
             test_gen.reset()
+
             res = model.predict_generator(test_gen,
                                           verbose=self._verbose,
                                           steps=test_gen.steps).flatten()
