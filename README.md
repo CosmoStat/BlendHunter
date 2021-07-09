@@ -4,8 +4,8 @@
 Deep learning tool for identifying blended galaxy images in survey images.
 
 ---
-> Main contributor:  Samuel Farrens
-> Email: samuel.farrens@cea.fr
+> Main contributor:  href="https://github.com/sfarrens" target="_blank" style="text-decoration:none; color: #F08080">Samuel Farrens</a>  
+> Email: <a href="mailto:samuel.farrens@cea.fr" style="text-decoration:none; color: #F08080">samuel.farrens@cea.fr</a>
 
 ---
 
