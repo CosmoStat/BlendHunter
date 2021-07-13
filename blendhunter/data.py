@@ -11,7 +11,7 @@ This module defines classes and methods for preparing training data.
 import os
 import numpy as np
 import cv2
-from blendhunter.blend import Blender
+from .blend import Blender
 
 
 class CreateTrainData(object):
@@ -26,7 +26,7 @@ class CreateTrainData(object):
     output_path : str
         Path to where the data will be saved
     train_fractions : tuple, optional
-        Fraction of training, validation and testing samples from the input
+        Fraction of trainig, validation and testing samples from the input
         images, default is (0.45, 0.45, .1)
     classes : tuple, optional
         Names of the various data classes, default is ('blended',
@@ -44,7 +44,7 @@ class CreateTrainData(object):
 
     """
 
-    def __init__(self, images, output_path, train_fractions=(0.45, 0.45, 0.1),
+    def __init__(self, images, output_path, train_fractions=(0.45, 0.45, .1),
                  classes=('blended', 'not_blended'),
                  class_fractions=(0.5, 0.5), blend_images=True,
                  blend_fractions=(0.5, 0.5), blend_method='sf'):
@@ -122,7 +122,7 @@ class CreateTrainData(object):
     def _get_slices(array, fractions):
         """ Get Slices
 
-        This method converts sample fractions into slice elements for a given
+        This method converts sample fractions into slice elemets for a given
         array.
 
         Parameters
@@ -279,7 +279,6 @@ class CreateTrainData(object):
 
         np.save('{}/labels.npy'.format(self._test_path), labels)
 
-
     def _write_positions(self, pos_list):
 
         np.save('{}/positions.npy'.format(self._test_path), np.array(pos_list))
@@ -361,56 +360,19 @@ class CreateTrainData(object):
                 test_set = np.vstack(test_set)
             self._write_images(test_set, self._test_path)
 
+    def prep_axel(self):
 
-    def prep_axel(self, path_to_output=None, psf=None, param_1 = None, param_2=None, map=None):
-        # Can add parameters : psf, param_1, param_2, map
-
-        #self.images[0] = np.random.permutation(self.images[0])
-        #self.images[1] = np.random.permutation(self.images[1])
+        self.images[0] = np.random.permutation(self.images[0])
+        self.images[1] = np.random.permutation(self.images[1])
 
         split1 = self._split_array(self.images[0], self.train_fractions)
         split2 = self._split_array(self.images[1], self.train_fractions)
-
-        #Split fwhm
-        train_fractions=(0.45, 0.45, 0.1)
-        #psf_split1 = CreateTrainData._split_array(psf[0], train_fractions)
-        #psf_split2 = CreateTrainData._split_array(psf[1], train_fractions)
-
-        #Split shift params
-        #x_split = CreateTrainData._split_array(param_1[0], train_fractions)
-        #y_split = CreateTrainData._split_array(param_2[0], train_fractions)
-
-        #Split segmentation map
-        #map_split = CreateTrainData._split_array(map[0], train_fractions)
 
         train_set = split1[0], split2[0]
         valid_set = split1[1], split2[1]
         test_set = split1[2], split2[2]
 
-
-        #test_psf = psf_split1[2], psf_split2[2]
-        #test_param_x = x_split[2]
-        #test_param_y = y_split[2]
-        #test_im_blended = split1[2] #blended test images
-        #test_im_nb = split2[2]
-        #test_map = map_split[2]
-
         self._write_data_set(train_set, self._train_paths)
         self._write_data_set(valid_set, self._valid_paths)
         self._write_labels(test_set)
         self._write_images(np.vstack(test_set), self._test_path)
-
-        #Save test_psf
-        #np.save(path_to_output+'/test_psf.npy', test_psf)
-
-        #Save test_params
-        #np.save(path_to_output+'/test_param_x.npy', test_param_x)
-        #np.save(path_to_output+'/test_param_y.npy', test_param_y)
-
-        #Save blended test images
-        #np.save(path_to_output+'/gal_im_blended.npy', test_im_blended)
-        #np.save(path_to_output+'/gal_im_nb.npy', test_im_nb)
-        #np.save(path_to_output+'/test_images.npy', test_set)
-
-        #Save seg_map
-        #np.save(path_to_output+'/test_seg_map.npy', test_map)
