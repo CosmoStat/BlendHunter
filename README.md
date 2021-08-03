@@ -74,7 +74,7 @@ sep_mean, sep_std = get_acc('sep_pad_results', out_path, noise_sigma, n_noise_re
 
 Plot results with error bars:
 <div align="center">
-  <img src="https://accuracy_plot.png" alt="Accuracy plot">
+  <img src="https://user-images.githubusercontent.com/7417573/128098228-eb9c6a73-f153-464b-af75-284657f885be.png" alt="Accuracy plot">
 </div>
 
 Get labels and accuracy on Cosmos images:
