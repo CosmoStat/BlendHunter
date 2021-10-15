@@ -1,5 +1,5 @@
 
-"""Getting started"""
+"""Create Directories"""
 
 import numpy as np
 import os
@@ -34,9 +34,6 @@ bhconfig = BHConfig().config
 out_path = bhconfig['out_path']
 noise_sigma = bhconfig['noise_sigma']
 n_noise_real = bhconfig['n_noise_real']
-
-# Generate 35 directories for non padded images
-# create_dirs(out_path, noise_sigma, n_noise_real)
 
 # Generate 35 directories for padded images
 create_dirs(out_path, noise_sigma, n_noise_real, dir_str='bh_pad')

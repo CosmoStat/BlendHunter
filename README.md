@@ -30,36 +30,93 @@ $ git clone https://github.com/CosmoStat/BlendHunter.git
 $ pip install -e .
 ```
 
-## Quick usage
+## Reproducible Research
 
-Configuration setup:
-```python
-from blendhunter.config import BHConfig
+To repeat experiments carried out in [Farrens et al. (2021)](...) or to carry out similar experiments on a different data set you will need to go through the following steps.
 
-bhconfig = BHConfig(config_file='../data/bhconfig.yml').config
-in_path = bhconfig['in_path']
-out_path = bhconfig['out_path']
-noise_sigma = bhconfig['noise_sigma']
-n_noise_real = bhconfig['n_noise_real']
-sample_range = slice(*bhconfig['sep_sample_range'])
+### Download Data
+
+You can download the parametric training data and realistic CFIS-like images [here]().
+
+Alternatively, you can use your own data provided it is formatted in the same way.
+
+### Configuration Setup
+
+You will need to modify the `bhconfig.yml` file in the `data` directory. Specifically, specifying the paths to the input data and where outputs should be written.
+
+The structure of this file is as follows
+
+```yml
+out_path: ...
+in_path: ...
+cosmos_path: ...
+noise_sigma:
+  - 5
+  - 10
+  - 15
+  - 20
+  - 25
+  - 30
+  - 35
+n_noise_real: 10
+sep_sample_range:
+  - 36000
+  - 40000
+cosmos_sample_range:
+  - 0
+  - 10000
 ```
-Create 35 directories for padded parametric images and prepare data:
+
+where:
+
+- `out_path` specifies the path where outputs should be written.
+- `in_path` specifies the path to the input parametric model training data.
+- `cosmos_path` specifies the path to the input realistic testing data.
+- `noise_sigma` specifies the list of noise standard deviations that should be added to the training data.
+- `n_noise_real` specifies the number of noise realisations that should be made for each noise level.
+- `sep_sample_range` specifies the range of objects in the training sample on which SEP should be run.
+- `cosmos_sample_range` specifies the range of objects...
+
+### Prepare Data
+
+Once you have downloaded (or formatted) your data and updated the configuration file you should run the following scrips in the `scripts` directory.
+
 ```bash
-python create_directories.py
-python prep_data.py
+$ python scripts/create_directories.py
 ```
-Run BlendHunter network and Source-Extractor as a bechmark:
+
+This will prepare directories in your output path to store all of the output products.
+
+```bash
+$ python scripts/prep_data.py
+```
+
+This will prepare the training and testing data set by padding, adding noise and converting to PNG files.
+
+> :warning: Each noise level and realisation will constitute an independent data set and increase the amount of storage space required. *e.g.* 7 noise levels and 10 realisations will constitute 70 times the volume of data.
+
+### Run BlendHunter and SEP
+
+Run BlendHunter to train the network on the parametric training data. This additionally tests the resulting weights by making predictions on a subsample of this data reserved for testing.
+
 ```bash
 python run_bh.py
+```
+
+Run SEP on the subsample of testing data for comparison.
+
+```
 python run_sep.py
 ```
-### Test on COSMOS images
+
+### Test on CFIS-like images
+
+Run both BlendHunter and SEP on the realistic CFIS-like testing data.
+
 ```python
 python test_cosmos.py
 ```
 
-### notebooks
-Find the jupyter notebooks for results visualization.
+### Notebooks
 
-### sextractor
-Find the scripts to run SExtractor.
+Finally, in the `notebooks` directory, you will find several Jupyter notebooks where you can reproduce the plots in the paper or make equivalent plots for a different data set.
