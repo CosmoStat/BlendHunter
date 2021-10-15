@@ -100,21 +100,21 @@ This will prepare the training and testing data set by padding, adding noise and
 Run BlendHunter to train the network on the parametric training data. This additionally tests the resulting weights by making predictions on a subsample of this data reserved for testing.
 
 ```bash
-python run_bh.py
+$ python scripts/run_bh.py
 ```
 
 Run SEP on the subsample of testing data for comparison.
 
-```
-python run_sep.py
+```bash
+$ python scripts/run_sep.py
 ```
 
 ### Test on CFIS-like images
 
 Run both BlendHunter and SEP on the realistic CFIS-like testing data.
 
-```python
-python test_cosmos.py
+```bash
+$ python scripts/test_cosmos.py
 ```
 
 ### Notebooks
