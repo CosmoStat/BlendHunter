@@ -10,7 +10,7 @@ Deep learning tool for identifying blended galaxy images in survey images.
 > - <a href="https://github.com/andrevitorelli" target="_blank" style="text-decoration:none; color: #F08080">André Zamorano Vitorelli</a>
 ---
 
-BlendHunter deep transfer learning based approach for the automated and robust identification of blended sources in galaxy survey data.
+BlendHunter deep transfer learning based approach for the automated and robust identification of blended sources in galaxy survey data. See [Farrens et al. (2021)](...) for details.
 
 ## Dependencies
 The following python packages should be installed with their specific dependencies:
